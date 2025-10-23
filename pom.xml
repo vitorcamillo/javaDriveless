@@ -5,21 +5,35 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.selenium</groupId>
+    <groupId>io.github.vitorcamillo</groupId>
     <artifactId>java-driverless</artifactId>
     <version>1.9.4</version>
     <packaging>jar</packaging>
 
     <name>Java Driverless</name>
     <description>Automação de navegador sem chromedriver - conversão fiel do Selenium-Driverless Python</description>
-    <url>https://github.com/selenium-driverless/java-driverless</url>
+    <url>https://github.com/vitorcamillo/javaDriveless</url>
 
     <licenses>
         <license>
-            <name>Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International</name>
-            <url>https://creativecommons.org/licenses/by-nc-sa/4.0/</url>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
+
+    <developers>
+        <developer>
+            <name>Vitor Camillo</name>
+            <email>vitor@example.com</email>
+            <url>https://github.com/vitorcamillo</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/vitorcamillo/javaDriveless.git</connection>
+        <developerConnection>scm:git:ssh://github.com:vitorcamillo/javaDriveless.git</developerConnection>
+        <url>https://github.com/vitorcamillo/javaDriveless</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -24,7 +24,7 @@ Automação web indetectável usando Chrome DevTools Protocol (CDP) diretamente,
 
 ```xml
 <dependency>
-    <groupId>io.github.selenium</groupId>
+    <groupId>io.github.vitorcamillo</groupId>
     <artifactId>java-driverless</artifactId>
     <version>1.9.4</version>
 </dependency>
@@ -33,7 +33,7 @@ Automação web indetectável usando Chrome DevTools Protocol (CDP) diretamente,
 ### Compilar do fonte
 
 ```bash
-git clone https://github.com/seu-usuario/javaDriveless.git
+git clone https://github.com/vitorcamillo/javaDriveless.git
 cd javaDriveless
 mvn clean install
 ```
@@ -411,8 +411,8 @@ Veja [LICENSE](LICENSE) para detalhes.
 
 ## Suporte
 
-- Issues: [GitHub Issues](https://github.com/seu-usuario/javaDriveless/issues)
-- Discussões: [GitHub Discussions](https://github.com/seu-usuario/javaDriveless/discussions)
+- Issues: [GitHub Issues](https://github.com/vitorcamillo/javaDriveless/issues)
+- Discussões: [GitHub Discussions](https://github.com/vitorcamillo/javaDriveless/discussions)
 
 ---
 

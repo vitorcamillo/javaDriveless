@@ -23,7 +23,7 @@ Abra uma [Issue](https://github.com/seu-usuario/javaDriveless/issues) descrevend
 ### Pull Requests
 
 1. Fork o repositório
-2. Clone seu fork: `git clone https://github.com/seu-usuario/javaDriveless.git`
+2. Clone seu fork: `git clone https://github.com/vitorcamillo/javaDriveless.git`
 3. Crie uma branch: `git checkout -b feature/minha-feature`
 4. Faça suas mudanças
 5. Teste localmente: `mvn clean test`
@@ -85,7 +85,7 @@ Atualize o README.md se sua mudança:
 
 ## Dúvidas?
 
-Abra uma [Discussion](https://github.com/seu-usuario/javaDriveless/discussions) ou comente em uma Issue existente.
+Abra uma [Discussion](https://github.com/vitorcamillo/javaDriveless/discussions) ou comente em uma Issue existente.
 
 ---
 
