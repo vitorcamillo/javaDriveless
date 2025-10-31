@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Teste Keyboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 50px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        input:focus, textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        h1 { color: #333; }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        #log {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Keyboard - JavaDriverless</h1>
+        
+        <div class="info">
+            <strong>ID da página:</strong> <span id="pageId">keyboard-test-page</span><br>
+            <strong>Último evento:</strong> <span id="lastEvent">-</span><br>
+            <strong>Contador de eventos:</strong> <span id="eventCount">0</span>
+        </div>
+
+        <label><strong>Campo de texto 1:</strong></label>
+        <input type="text" id="input1" placeholder="Digite aqui...">
+
+        <label><strong>Campo de texto 2:</strong></label>
+        <input type="text" id="input2" placeholder="Pressione Tab para chegar aqui...">
+
+        <label><strong>Área de texto:</strong></label>
+        <textarea id="textarea1" rows="4" placeholder="Ctrl+A funciona aqui..."></textarea>
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let eventCount = 0;
+        const log = document.getElementById('log');
+        const lastEvent = document.getElementById('lastEvent');
+        const eventCountSpan = document.getElementById('eventCount');
+
+        function addLog(msg) {
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `[${time}] ${msg}<br>`;
+            log.scrollTop = log.scrollHeight;
+            lastEvent.textContent = msg;
+            eventCount++;
+            eventCountSpan.textContent = eventCount;
+        }
+
+        // Monitora todos os campos
+        ['input1', 'input2', 'textarea1'].forEach(id => {
+            const el = document.getElementById(id);
+            
+            el.addEventListener('keydown', (e) => {
+                addLog(`⌨️ KeyDown: ${e.key} em ${id}`);
+            });
+            
+            el.addEventListener('keyup', (e) => {
+                addLog(`⌨️ KeyUp: ${e.key} em ${id}`);
+            });
+            
+            el.addEventListener('input', (e) => {
+                addLog(`✏️ Input em ${id}: "${e.target.value}"`);
+            });
+            
+            el.addEventListener('focus', (e) => {
+                addLog(`🎯 Focus em ${id}`);
+            });
+        });
+
+        // Monitora Ctrl+A
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'a') {
+                addLog('🔥 Ctrl+A detectado!');
+            }
+            if (e.key === 'F5') {
+                addLog('🔄 F5 detectado!');
+            }
+        });
+
+        addLog('✅ Página carregada e pronta!');
+    </script>
+</body>
+</html>
+
