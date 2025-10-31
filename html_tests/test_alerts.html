@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Teste Alerts</title>
+    <style>
+        body { font-family: Arial; padding: 50px; background: #f0f0f0; }
+        .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
+        button { padding: 15px 30px; margin: 10px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; }
+        .alert-btn { background: #ff9800; color: white; }
+        .confirm-btn { background: #2196f3; color: white; }
+        .prompt-btn { background: #4caf50; color: white; }
+        #result { background: #e3f2fd; padding: 15px; border-radius: 5px; margin-top: 20px; min-height: 50px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste Alerts</h1>
+        
+        <button class="alert-btn" onclick="testAlert()">Teste Alert</button>
+        <button class="confirm-btn" onclick="testConfirm()">Teste Confirm</button>
+        <button class="prompt-btn" onclick="testPrompt()">Teste Prompt</button>
+        
+        <div id="result">Resultado aparecerá aqui...</div>
+    </div>
+
+    <script>
+        function testAlert() {
+            alert('Este é um alert!');
+            document.getElementById('result').textContent = 'Alert foi fechado';
+        }
+
+        function testConfirm() {
+            const result = confirm('Você confirma?');
+            document.getElementById('result').textContent = 'Confirm retornou: ' + result;
+        }
+
+        function testPrompt() {
+            const result = prompt('Digite algo:', 'valor padrão');
+            document.getElementById('result').textContent = 'Prompt retornou: ' + result;
+        }
+    </script>
+</body>
+</html>
+
