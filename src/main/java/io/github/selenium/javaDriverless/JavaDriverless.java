@@ -1,3 +1,7 @@
+// Ported from: https://github.com/kaliiiiiiiiii/Selenium-Driverless
+// Original Author: kaliiiiiiiiii | Aurin Aegerter
+// Java Port: Vitor Camillo (io.github.vitorcamillo)
+
 package io.github.selenium.javaDriverless;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,16 +17,19 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Wrapper simplificado do Chrome com gerenciamento automático de profiles.
  * 
- * <p>Esta classe gerencia automaticamente:
+ * <p>
+ * Esta classe gerencia automaticamente:
  * <ul>
- *   <li>Limpeza de processos Chrome antigos (de execuções anteriores que crashearam)</li>
- *   <li>Salvamento do PID do processo</li>
- *   <li>Profile persistente com nome único</li>
- *   <li>Cleanup ao encerrar</li>
+ * <li>Limpeza de processos Chrome antigos (de execuções anteriores que
+ * crashearam)</li>
+ * <li>Salvamento do PID do processo</li>
+ * <li>Profile persistente com nome único</li>
+ * <li>Cleanup ao encerrar</li>
  * </ul>
  * </p>
  * 
  * <h3>Exemplo de uso simples:</h3>
+ * 
  * <pre>{@code
  * // Usar profile padrão
  * JavaDriverless driver = new JavaDriverless();
@@ -42,6 +49,7 @@ import java.util.concurrent.CompletableFuture;
  * }</pre>
  * 
  * <h3>Exemplo com múltiplos bots:</h3>
+ * 
  * <pre>{@code
  * JavaDriverless bot1 = new JavaDriverless("Bot_1");
  * JavaDriverless bot2 = new JavaDriverless("Bot_2");
@@ -52,10 +60,10 @@ import java.util.concurrent.CompletableFuture;
  * }</pre>
  */
 public class JavaDriverless implements AutoCloseable {
-    
+
     private static final String DEFAULT_PROFILE_NAME = "default";
     private static final String PROFILES_DIR = "profiles";
-    
+
     private final String nomeJanela;
     private final ProfileManager profileManager;
     private final Chrome chrome;
@@ -65,14 +73,14 @@ public class JavaDriverless implements AutoCloseable {
     private long implicitWaitMillis = 0;
     private long scriptTimeoutMillis = 30000;
     private long pageLoadTimeoutMillis = 300000;
-    
+
     /**
      * Cria uma nova instância com profile "default" e gerenciamento ativado.
      */
     public JavaDriverless() {
         this(DEFAULT_PROFILE_NAME, null, true);
     }
-    
+
     /**
      * Cria uma nova instância com opções customizadas e profile "default".
      * Estilo Selenium: new JavaDriverless(options)
@@ -82,88 +90,95 @@ public class JavaDriverless implements AutoCloseable {
     public JavaDriverless(ChromeOptions options) {
         this(DEFAULT_PROFILE_NAME, options, true);
     }
-    
+
     /**
      * Cria uma nova instância com profile "default" e controle de gerenciamento.
      * 
-     * @param useProfileManagement true para usar gerenciamento de profiles, false para desabilitar
+     * @param useProfileManagement true para usar gerenciamento de profiles, false
+     *                             para desabilitar
      */
     public JavaDriverless(boolean useProfileManagement) {
         this(DEFAULT_PROFILE_NAME, null, useProfileManagement);
     }
-    
+
     /**
      * Cria uma nova instância com nome de janela e gerenciamento ativado.
      * 
-     * <p>Ao criar, automaticamente:
+     * <p>
+     * Ao criar, automaticamente:
      * <ul>
-     *   <li>Verifica e fecha Chrome antigo deste profile (se existir)</li>
-     *   <li>Cria novo Chrome com profile persistente</li>
-     *   <li>Salva o PID para gerenciamento futuro</li>
+     * <li>Verifica e fecha Chrome antigo deste profile (se existir)</li>
+     * <li>Cria novo Chrome com profile persistente</li>
+     * <li>Salva o PID para gerenciamento futuro</li>
      * </ul>
      * </p>
      * 
-     * @param nomeJanela nome único para esta janela/profile (use null para "default")
+     * @param nomeJanela nome único para esta janela/profile (use null para
+     *                   "default")
      */
     public JavaDriverless(String nomeJanela) {
         this(nomeJanela, null, true);
     }
-    
+
     /**
      * Cria uma nova instância com nome de janela, opções e gerenciamento ativado.
      * 
-     * @param nomeJanela nome único para esta janela/profile (use null para "default")
-     * @param options opções do Chrome (pode ser null para usar padrões)
+     * @param nomeJanela nome único para esta janela/profile (use null para
+     *                   "default")
+     * @param options    opções do Chrome (pode ser null para usar padrões)
      */
     public JavaDriverless(String nomeJanela, ChromeOptions options) {
         this(nomeJanela, options, true);
     }
-    
+
     /**
      * Cria uma nova instância com opções e controle de gerenciamento.
      * 
-     * @param options opções do Chrome
+     * @param options              opções do Chrome
      * @param useProfileManagement true para usar gerenciamento de profiles
      */
     public JavaDriverless(ChromeOptions options, boolean useProfileManagement) {
         this(DEFAULT_PROFILE_NAME, options, useProfileManagement);
     }
-    
+
     /**
      * Construtor completo com todas as opções.
      * 
-     * @param nomeJanela nome único para esta janela/profile (use null para "default")
-     * @param options opções do Chrome (pode ser null para usar padrões)
-     * @param useProfileManagement true para usar gerenciamento de profiles, false para desabilitar
+     * @param nomeJanela           nome único para esta janela/profile (use null
+     *                             para "default")
+     * @param options              opções do Chrome (pode ser null para usar
+     *                             padrões)
+     * @param useProfileManagement true para usar gerenciamento de profiles, false
+     *                             para desabilitar
      */
     public JavaDriverless(String nomeJanela, ChromeOptions options, boolean useProfileManagement) {
         this.nomeJanela = (nomeJanela != null && !nomeJanela.trim().isEmpty()) ? nomeJanela : DEFAULT_PROFILE_NAME;
         this.useProfileManagement = useProfileManagement;
         this.profileManager = useProfileManagement ? new ProfileManager(PROFILES_DIR) : null;
         this.options = (options != null) ? options : new ChromeOptions();
-        
+
         System.out.println("════════════════════════════════════════════════════");
         System.out.println("  JavaDriverless - Profile: " + this.nomeJanela);
         System.out.println("  Gerenciamento: " + (useProfileManagement ? "ATIVADO" : "DESATIVADO"));
         System.out.println("════════════════════════════════════════════════════");
-        
+
         try {
             if (useProfileManagement) {
                 // MODO COM GERENCIAMENTO DE PROFILES
-                
+
                 // PASSO 1: Limpar processo antigo (se existir)
                 System.out.println("[1/3] Verificando processos antigos...");
                 boolean hadOldProcess = this.profileManager.cleanupOldProcess(this.nomeJanela);
-                
+
                 if (hadOldProcess) {
                     System.out.println("      [AVISO] Chrome antigo detectado e FECHADO!");
                 } else {
                     System.out.println("      [OK] Nenhum processo antigo encontrado");
                 }
-                
+
                 // PASSO 2: Configurar profile persistente
                 System.out.println("[2/3] Configurando profile...");
-                
+
                 // Se não foi especificado userDataDir, usar pasta profiles/ na raiz do projeto
                 if (this.options.getUserDataDir() == null) {
                     String projectRoot = System.getProperty("user.dir");
@@ -171,41 +186,41 @@ public class JavaDriverless implements AutoCloseable {
                     this.options.setUserDataDir(profilePath);
                     System.out.println("      [OK] Profile path: " + profilePath);
                 }
-                
+
                 // PASSO 3: Criar Chrome
                 System.out.println("[3/3] Iniciando Chrome...");
                 this.chrome = Chrome.create(this.options).get();
-                
+
                 long pid = this.chrome.getBrowserPid();
                 System.out.println("      [OK] Chrome iniciado (PID: " + pid + ")");
-                
+
                 // PASSO 4: Salvar PID
                 this.profileManager.savePid(this.nomeJanela, pid);
                 System.out.println("      [OK] PID salvo");
-                
+
             } else {
                 // MODO SEM GERENCIAMENTO (como era antes)
-                
+
                 System.out.println("[1/1] Iniciando Chrome (sem gerenciamento de profiles)...");
                 this.chrome = Chrome.create(this.options).get();
-                
+
                 long pid = this.chrome.getBrowserPid();
                 System.out.println("      [OK] Chrome iniciado (PID: " + pid + ")");
                 System.out.println("      [INFO] Profile temporário (será deletado ao fechar)");
             }
-            
+
             this.started = true;
-            
+
             System.out.println("════════════════════════════════════════════════════");
             System.out.println("  [OK] JavaDriverless pronto para uso!");
             System.out.println("════════════════════════════════════════════════════\n");
-            
+
         } catch (Exception e) {
             System.err.println("[ERRO] Erro ao iniciar JavaDriverless: " + e.getMessage());
             throw new RuntimeException("Erro ao iniciar JavaDriverless", e);
         }
     }
-    
+
     /**
      * Obtém o nome da janela/profile.
      * 
@@ -214,7 +229,7 @@ public class JavaDriverless implements AutoCloseable {
     public String getNomeJanela() {
         return nomeJanela;
     }
-    
+
     /**
      * Obtém o ProfileManager.
      * 
@@ -223,7 +238,7 @@ public class JavaDriverless implements AutoCloseable {
     public ProfileManager getProfileManager() {
         return profileManager;
     }
-    
+
     /**
      * Verifica se o gerenciamento de profiles está ativado.
      * 
@@ -232,7 +247,7 @@ public class JavaDriverless implements AutoCloseable {
     public boolean isProfileManagementEnabled() {
         return useProfileManagement;
     }
-    
+
     /**
      * Obtém a instância do Chrome.
      * 
@@ -241,7 +256,7 @@ public class JavaDriverless implements AutoCloseable {
     public Chrome getChrome() {
         return chrome;
     }
-    
+
     /**
      * Obtém o PID do processo Chrome.
      * 
@@ -250,11 +265,11 @@ public class JavaDriverless implements AutoCloseable {
     public long getPid() {
         return chrome.getBrowserPid();
     }
-    
+
     // ========================================================================
     // MÉTODOS DELEGADOS AO CHROME (para facilitar o uso)
     // ========================================================================
-    
+
     /**
      * Navega para uma URL.
      * 
@@ -269,18 +284,18 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao navegar para: " + url, e);
         }
     }
-    
+
     /**
      * Navega para uma URL.
      * 
-     * @param url URL para navegar
+     * @param url      URL para navegar
      * @param waitLoad se deve aguardar o carregamento
      * @return CompletableFuture
      */
     public CompletableFuture<Map<String, Object>> get(String url, boolean waitLoad) {
         return chrome.get(url, waitLoad);
     }
-    
+
     /**
      * Obtém o título da página.
      * 
@@ -293,7 +308,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao obter título", e);
         }
     }
-    
+
     /**
      * Obtém o título da página (async).
      * 
@@ -302,7 +317,7 @@ public class JavaDriverless implements AutoCloseable {
     public CompletableFuture<String> getTitleAsync() {
         return chrome.getTitle();
     }
-    
+
     /**
      * Obtém a URL atual.
      * 
@@ -315,7 +330,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao obter URL", e);
         }
     }
-    
+
     /**
      * Obtém o código HTML da página.
      * 
@@ -328,7 +343,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao obter código fonte", e);
         }
     }
-    
+
     /**
      * Obtém a URL atual (async).
      * 
@@ -337,7 +352,7 @@ public class JavaDriverless implements AutoCloseable {
     public CompletableFuture<String> getCurrentUrlAsync() {
         return chrome.getCurrentUrl();
     }
-    
+
     /**
      * Busca um elemento usando o localizador By (recomendado).
      * 
@@ -347,11 +362,11 @@ public class JavaDriverless implements AutoCloseable {
     public WebElement findElement(io.github.selenium.javaDriverless.types.By by) {
         return findElement(by.getStrategy(), by.getValue());
     }
-    
+
     /**
      * Busca um elemento na página.
      * 
-     * @param by estratégia de busca (css, xpath, etc)
+     * @param by    estratégia de busca (css, xpath, etc)
      * @param value valor da busca
      * @return elemento encontrado
      */
@@ -362,7 +377,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao buscar elemento: " + by + "=" + value, e);
         }
     }
-    
+
     /**
      * Busca múltiplos elementos usando o localizador By (recomendado).
      * 
@@ -372,11 +387,11 @@ public class JavaDriverless implements AutoCloseable {
     public List<WebElement> findElements(io.github.selenium.javaDriverless.types.By by) {
         return findElements(by.getStrategy(), by.getValue());
     }
-    
+
     /**
      * Busca múltiplos elementos na página.
      * 
-     * @param by estratégia de busca
+     * @param by    estratégia de busca
      * @param value valor da busca
      * @return lista de elementos
      */
@@ -387,7 +402,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao buscar elementos: " + by + "=" + value, e);
         }
     }
-    
+
     /**
      * Executa JavaScript na página.
      * 
@@ -401,19 +416,19 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao executar script", e);
         }
     }
-    
+
     /**
      * Executa JavaScript na página (async).
      * 
-     * @param script código JavaScript
-     * @param args argumentos
+     * @param script       código JavaScript
+     * @param args         argumentos
      * @param awaitPromise se deve aguardar promises
      * @return CompletableFuture com o resultado
      */
     public CompletableFuture<Object> executeScriptAsync(String script, Object[] args, boolean awaitPromise) {
         return chrome.executeScript(script, args, awaitPromise);
     }
-    
+
     /**
      * Aguarda em segundos.
      * 
@@ -428,7 +443,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao aguardar", e);
         }
     }
-    
+
     /**
      * Volta para a página anterior.
      * 
@@ -442,7 +457,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao voltar", e);
         }
     }
-    
+
     /**
      * Avança para a próxima página.
      * 
@@ -456,7 +471,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao avançar", e);
         }
     }
-    
+
     /**
      * Recarrega a página.
      * 
@@ -470,7 +485,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao recarregar", e);
         }
     }
-    
+
     /**
      * Tira screenshot e salva em arquivo.
      * 
@@ -485,7 +500,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao tirar screenshot", e);
         }
     }
-    
+
     /**
      * Maximiza a janela.
      * 
@@ -499,7 +514,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao maximizar", e);
         }
     }
-    
+
     /**
      * Minimiza a janela.
      * 
@@ -513,7 +528,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao minimizar", e);
         }
     }
-    
+
     /**
      * Coloca a janela em modo fullscreen.
      * 
@@ -527,7 +542,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao fullscreen", e);
         }
     }
-    
+
     /**
      * Retorna o tamanho da janela.
      * 
@@ -540,11 +555,11 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao obter tamanho da janela", e);
         }
     }
-    
+
     /**
      * Define o tamanho da janela.
      * 
-     * @param width largura em pixels
+     * @param width  largura em pixels
      * @param height altura em pixels
      * @return this para chamadas encadeadas
      */
@@ -556,7 +571,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao definir tamanho da janela", e);
         }
     }
-    
+
     /**
      * Retorna a posição da janela.
      * 
@@ -569,7 +584,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao obter posição da janela", e);
         }
     }
-    
+
     /**
      * Define a posição da janela.
      * 
@@ -585,7 +600,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao definir posição da janela", e);
         }
     }
-    
+
     /**
      * Obtém todos os cookies.
      * 
@@ -598,7 +613,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao obter cookies", e);
         }
     }
-    
+
     /**
      * Adiciona um cookie.
      * 
@@ -613,7 +628,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao adicionar cookie", e);
         }
     }
-    
+
     /**
      * Deleta todos os cookies.
      * 
@@ -627,7 +642,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao deletar cookies", e);
         }
     }
-    
+
     /**
      * Obtém um cookie específico por nome.
      * 
@@ -638,14 +653,14 @@ public class JavaDriverless implements AutoCloseable {
         try {
             List<Map<String, Object>> cookies = chrome.getCookies().get();
             return cookies.stream()
-                .filter(cookie -> name.equals(cookie.get("name")))
-                .findFirst()
-                .orElse(null);
+                    .filter(cookie -> name.equals(cookie.get("name")))
+                    .findFirst()
+                    .orElse(null);
         } catch (Exception e) {
             throw new RuntimeException("Erro ao obter cookie: " + name, e);
         }
     }
-    
+
     /**
      * Deleta um cookie específico por nome.
      * 
@@ -663,14 +678,14 @@ public class JavaDriverless implements AutoCloseable {
                     args.put("domain", cookie.get("domain"));
                 }
                 chrome.getCurrentTarget().get()
-                    .executeCdpCmd("Network.deleteCookies", args, 5.0f).get();
+                        .executeCdpCmd("Network.deleteCookies", args, 5.0f).get();
             }
             return this;
         } catch (Exception e) {
             throw new RuntimeException("Erro ao deletar cookie: " + name, e);
         }
     }
-    
+
     /**
      * Envia teclas.
      * 
@@ -685,9 +700,10 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao enviar teclas", e);
         }
     }
-    
+
     /**
-     * Define o timeout de implicit wait (tempo de espera implícito para encontrar elementos).
+     * Define o timeout de implicit wait (tempo de espera implícito para encontrar
+     * elementos).
      * 
      * @param millis timeout em milissegundos
      * @return esta instância para method chaining
@@ -696,7 +712,7 @@ public class JavaDriverless implements AutoCloseable {
         this.implicitWaitMillis = millis;
         return this;
     }
-    
+
     /**
      * Define o timeout para execução de scripts.
      * 
@@ -707,7 +723,7 @@ public class JavaDriverless implements AutoCloseable {
         this.scriptTimeoutMillis = millis;
         return this;
     }
-    
+
     /**
      * Define o timeout para carregamento de páginas.
      * 
@@ -718,7 +734,7 @@ public class JavaDriverless implements AutoCloseable {
         this.pageLoadTimeoutMillis = millis;
         return this;
     }
-    
+
     /**
      * Obtém o timeout de implicit wait atual.
      * 
@@ -727,7 +743,7 @@ public class JavaDriverless implements AutoCloseable {
     public long getImplicitWaitMillis() {
         return implicitWaitMillis;
     }
-    
+
     /**
      * Cria uma nova janela/aba.
      * 
@@ -741,7 +757,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao criar nova janela", e);
         }
     }
-    
+
     /**
      * Obtém todas as janelas abertas.
      * 
@@ -754,7 +770,7 @@ public class JavaDriverless implements AutoCloseable {
             throw new RuntimeException("Erro ao obter janelas", e);
         }
     }
-    
+
     /**
      * Obtém o Keyboard para interações avançadas de teclado.
      * 
@@ -763,7 +779,7 @@ public class JavaDriverless implements AutoCloseable {
     public io.github.selenium.javaDriverless.input.Keyboard getKeyboard() {
         return chrome.getCurrentKeyboard();
     }
-    
+
     /**
      * Obtém o Pointer para interações avançadas de mouse.
      * 
@@ -772,15 +788,16 @@ public class JavaDriverless implements AutoCloseable {
     public io.github.selenium.javaDriverless.input.Pointer getPointer() {
         return chrome.getCurrentPointer();
     }
-    
+
     /**
      * Fecha o Chrome e limpa recursos.
      * 
-     * <p>Automaticamente:
+     * <p>
+     * Automaticamente:
      * <ul>
-     *   <li>Fecha o Chrome</li>
-     *   <li>Deleta o arquivo de PID (se gerenciamento estiver ativado)</li>
-     *   <li>Limpa recursos</li>
+     * <li>Fecha o Chrome</li>
+     * <li>Deleta o arquivo de PID (se gerenciamento estiver ativado)</li>
+     * <li>Limpa recursos</li>
      * </ul>
      * </p>
      */
@@ -789,13 +806,13 @@ public class JavaDriverless implements AutoCloseable {
             System.out.println("\n════════════════════════════════════════════════════");
             System.out.println("  Encerrando JavaDriverless: " + nomeJanela);
             System.out.println("════════════════════════════════════════════════════");
-            
+
             if (chrome != null) {
                 System.out.println("[1/2] Fechando Chrome...");
                 chrome.quit().get();
                 System.out.println("      [OK] Chrome fechado");
             }
-            
+
             if (useProfileManagement && profileManager != null) {
                 System.out.println("[2/2] Limpando PID...");
                 profileManager.deletePidFile(nomeJanela);
@@ -803,17 +820,17 @@ public class JavaDriverless implements AutoCloseable {
             } else {
                 System.out.println("[2/2] Sem limpeza necessária (gerenciamento desabilitado)");
             }
-            
+
             System.out.println("════════════════════════════════════════════════════");
             System.out.println("  [OK] JavaDriverless encerrado com sucesso!");
             System.out.println("════════════════════════════════════════════════════\n");
-            
+
         } catch (Exception e) {
             System.err.println("[ERRO] Erro ao encerrar JavaDriverless: " + e.getMessage());
             throw new RuntimeException("Erro ao encerrar JavaDriverless", e);
         }
     }
-    
+
     /**
      * Implementação de AutoCloseable para uso com try-with-resources.
      */
@@ -821,11 +838,10 @@ public class JavaDriverless implements AutoCloseable {
     public void close() {
         quit();
     }
-    
+
     @Override
     public String toString() {
-        return String.format("JavaDriverless(nome='%s', pid=%d, started=%b)", 
-            nomeJanela, getPid(), started);
+        return String.format("JavaDriverless(nome='%s', pid=%d, started=%b)",
+                nomeJanela, getPid(), started);
     }
 }
-

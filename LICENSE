@@ -22,7 +22,17 @@ SOFTWARE.
 
 ---
 
-This project is a Java port of Selenium-Driverless Python project.
-Original project: https://github.com/kaliiiiiiiiii/Selenium-Driverless
-Original author: kaliiiiiiiiii
+---
+
+### Attribution & Acknowledgements
+
+This project is a Java port of the **[Selenium-Driverless](https://github.com/kaliiiiiiiiii/Selenium-Driverless)** Python project.
+
+- **Original Project:** [https://github.com/kaliiiiiiiiii/Selenium-Driverless](https://github.com/kaliiiiiiiiii/Selenium-Driverless)
+- **Original Author:** [kaliiiiiiiiii (Aurin Aegerter)](https://github.com/kaliiiiiiiiii)
+
+The core logic, indetectability techniques, and human-like interaction patterns were ported from the original Python implementation.
+
+This project is licensed under the MIT License, which is compatible with the original project's requirements for derivative works.
+
 

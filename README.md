@@ -20,13 +20,26 @@ Automação web indetectável usando Chrome DevTools Protocol (CDP) diretamente,
 
 ## Instalação
 
-### Maven
+### Maven (via JitPack)
+
+Para usar como dependência, adicione o repositório do JitPack ao seu `pom.xml`:
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+
+E adicione a dependência:
 
 ```xml
 <dependency>
-    <groupId>io.github.vitorcamillo</groupId>
-    <artifactId>java-driverless</artifactId>
-    <version>1.9.4</version>
+    <groupId>com.github.vitorcamillo</groupId>
+    <artifactId>javaDriveless</artifactId>
+    <version>v1.9.4</version>
 </dependency>
 ```
 
