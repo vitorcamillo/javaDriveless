@@ -115,12 +115,16 @@ public class BaseTarget {
                         this.socket.connectAsync().join();
                         this.started = true;
                         
-                        httpClient.close();
+                        // Fechar cliente HTTP antes de retornar
+                        try {
+                            httpClient.close();
+                        } catch (Exception ignored) {}
                         return this;
                         
                     } catch (Exception e) {
                         double elapsed = (System.nanoTime() - startTime) / 1_000_000_000.0;
                         if (elapsed > timeout) {
+                            // Fechar cliente HTTP antes de lançar exceção
                             try {
                                 httpClient.close();
                             } catch (IOException ignored) {}
@@ -133,12 +137,23 @@ public class BaseTarget {
                             Thread.sleep(100);
                         } catch (InterruptedException ie) {
                             Thread.currentThread().interrupt();
+                            // Fechar cliente HTTP antes de lançar exceção
+                            try {
+                                httpClient.close();
+                            } catch (IOException ignored) {}
                             throw new RuntimeException("Conexão interrompida", ie);
                         }
                     }
                 }
+            } catch (RuntimeException e) {
+                // Re-lançar RuntimeExceptions (já tratadas acima)
+                throw e;
             } catch (Exception e) {
-                throw new RuntimeException("Erro ao fechar cliente HTTP", e);
+                // Garantir que cliente HTTP seja fechado em qualquer exceção
+                try {
+                    httpClient.close();
+                } catch (IOException ignored) {}
+                throw new RuntimeException("Erro ao inicializar conexão com Chrome", e);
             }
         });
     }

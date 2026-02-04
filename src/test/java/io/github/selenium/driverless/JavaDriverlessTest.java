@@ -148,32 +148,41 @@ public class JavaDriverlessTest {
         
         JavaDriverless driver = new JavaDriverless("TestMetodos");
         
-        // Navegar para primeira página
-        driver.get("https://www.github.com");
-        driver.sleep(2);
-        
-        // Navegar para segunda página (para ter histórico)
-        driver.get("https://www.google.com");
-        driver.sleep(2);
-        
-        // Agora pode usar back (tem histórico)
-        driver.back();
-        driver.sleep(1);
-        
-        // Forward
-        driver.forward();
-        driver.sleep(1);
-        
-        // Refresh
-        driver.refresh();
-        driver.sleep(1);
-        
-        // Verificar título
-        String title = driver.getTitle();
-        assertNotNull(title);
-        System.out.println("Título: " + title);
-        
-        driver.quit();
+        try {
+            // Navegar para primeira página - usar URL mais simples caso GitHub tenha problemas
+            try {
+                driver.get("https://www.github.com");
+            } catch (RuntimeException e) {
+                // Se GitHub falhar, tentar outra página
+                System.err.println("Aviso: Falha ao navegar para GitHub, tentando Google...");
+                driver.get("https://www.google.com");
+            }
+            driver.sleep(2);
+            
+            // Navegar para segunda página (para ter histórico)
+            driver.get("https://www.google.com");
+            driver.sleep(2);
+            
+            // Agora pode usar back (tem histórico)
+            driver.back();
+            driver.sleep(1);
+            
+            // Forward
+            driver.forward();
+            driver.sleep(1);
+            
+            // Refresh
+            driver.refresh();
+            driver.sleep(1);
+            
+            // Verificar título
+            String title = driver.getTitle();
+            assertNotNull(title);
+            System.out.println("Título: " + title);
+            
+        } finally {
+            driver.quit();
+        }
         
         System.out.println("✓ Teste 6 concluído!");
     }

@@ -284,24 +284,20 @@ public class Target {
                                                                      boolean waitLoad, float timeout) {
         CompletableFuture<Map<String, Object>> result = new CompletableFuture<>();
         
-        CompletableFuture<Void> waitFuture = null;
+        // Usar timeout fornecido ou padrão
+        float actualTimeout = timeout > 0 ? timeout : this.timeout;
+        Float timeoutObj = actualTimeout;
         
+        // Habilitar Page domain se necessário (deve ser feito antes da navegação)
+        CompletableFuture<Void> enableFuture = CompletableFuture.completedFuture(null);
         if (waitLoad) {
             if (pageEnabled == null || !pageEnabled) {
-                executeCdpCmd("Page.enable", null, null).join();
+                enableFuture = executeCdpCmd("Page.enable", null, timeoutObj)
+                    .thenAccept(enabled -> pageEnabled = true);
             }
-            
-            // Aguardar loadEventFired ou download
-            CompletableFuture<JsonNode> loadFuture = waitForCdp("Page.loadEventFired", null);
-            // TODO: Implementar waitDownload
-            
-            waitFuture = loadFuture.thenAccept(data -> {
-                Map<String, Object> resultMap = objectMapper.convertValue(data, Map.class);
-                result.complete(resultMap);
-            });
         }
         
-        // Enviar comando de navegação
+        // Preparar argumentos de navegação
         Map<String, Object> args = new HashMap<>();
         args.put("url", url);
         args.put("transitionType", "link");
@@ -309,20 +305,34 @@ public class Target {
             args.put("referrer", referrer);
         }
         
-        CompletableFuture<JsonNode> navFuture = executeCdpCmd("Page.navigate", args, timeout);
-        
         if (waitLoad) {
-            return waitFuture.thenCompose(v -> navFuture)
-                .thenCompose(v -> {
-                    onLoaded();
-                    return result;
+            // Primeiro habilitar Page, depois agendar espera pelo evento, depois navegar
+            return enableFuture
+                .thenCompose(enabled -> {
+                    // IMPORTANTE: Agendar espera pelo evento ANTES de navegar
+                    CompletableFuture<JsonNode> loadFuture = waitForCdp("Page.loadEventFired", actualTimeout);
+                    
+                    // Navegar - isso vai disparar o evento que estamos aguardando
+                    CompletableFuture<JsonNode> navFuture = executeCdpCmd("Page.navigate", args, timeoutObj);
+                    
+                    // Aguardar que a navegação seja iniciada e depois esperar o evento de carregamento
+                    return navFuture
+                        .thenCompose(navResult -> loadFuture)
+                        .thenApply(data -> {
+                            Map<String, Object> resultMap = objectMapper.convertValue(data, Map.class);
+                            onLoaded();
+                            return resultMap;
+                        });
                 })
-                .orTimeout((long) (timeout * 1000), TimeUnit.MILLISECONDS);
+                .orTimeout((long) (actualTimeout * 1000), TimeUnit.MILLISECONDS);
         } else {
-            return navFuture.thenApply(v -> {
-                onLoaded();
-                return new HashMap<>();
-            });
+            // Navegar sem aguardar carregamento
+            return enableFuture
+                .thenCompose(enabled -> executeCdpCmd("Page.navigate", args, timeoutObj))
+                .thenApply(navResult -> {
+                    onLoaded();
+                    return new HashMap<String, Object>();
+                });
         }
     }
     

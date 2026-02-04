@@ -45,7 +45,8 @@ public class BasicFunctionalityTest {
     @DisplayName("Deve navegar para uma página")
     public void testNavigation() {
         driver.get("http://nowsecure.nl#relax");
-        driver.sleep(0.5);
+        // Aguardar a página carregar completamente antes de verificar a URL
+        driver.sleep(2.0);
         
         String url = driver.getCurrentUrl();
         assertThat(url).contains("nowsecure.nl");
@@ -55,6 +56,10 @@ public class BasicFunctionalityTest {
     @Order(3)
     @DisplayName("Deve obter título da página")
     public void testGetTitle() {
+        // Garantir que navegou para uma página primeiro
+        driver.get("http://nowsecure.nl#relax");
+        driver.sleep(2.0);
+        
         String title = driver.getTitle();
         assertThat(title).isNotNull();
         assertThat(title).isNotEmpty();
@@ -74,7 +79,8 @@ public class BasicFunctionalityTest {
     @Order(5)
     @DisplayName("Deve executar JavaScript")
     public void testExecuteScript() {
-        Object result = driver.executeScript("return navigator.userAgent");
+        // Não usar 'return' - executeScript aceita expressões JavaScript diretamente
+        Object result = driver.executeScript("navigator.userAgent");
         assertThat(result).isNotNull();
         String userAgent = result.toString();
         assertThat(userAgent).contains("Chrome");
@@ -116,7 +122,8 @@ public class BasicFunctionalityTest {
         var pointer = target.getPointer();
         
         assertThatCode(() -> {
-            pointer.moveTo(300, 300, 0.5, 2.0, 20.0);
+            // Aguardar o movimento completar antes de verificar a localização
+            pointer.moveTo(300, 300, 0.5, 2.0, 20.0).join();
             int[] location = pointer.getLocation();
             assertThat(location[0]).isEqualTo(300);
             assertThat(location[1]).isEqualTo(300);

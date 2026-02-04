@@ -264,15 +264,6 @@ public class Chrome implements AutoCloseable {
                     }
                 }
                 
-                // Configurar emulação de foco (opcional - nem todas as versões do Chrome suportam)
-                try {
-                    baseTarget.executeCdpCmd("Emulation.setFocusEmulationEnabled", 
-                        Map.of("enabled", true), null).join();
-                } catch (Exception e) {
-                    // Ignorar se não suportado
-                    System.err.println("Aviso: Emulation.setFocusEmulationEnabled não suportado nesta versão do Chrome");
-                }
-                
                 // Configurar diretório de downloads
                 if (options.getDownloadsDir() != null) {
                     Map<String, Object> args = new HashMap<>();
