@@ -4,9 +4,9 @@ Use perfis de site quando um site precisar de uma superfície de navegador mais 
 suíte padrão de mapeamento de fingerprint. O objetivo é isolar o que difere de uma execução
 funcional com Selenium/Chrome sem remover proteções globalmente.
 
-These JSON files are validation fixtures, not extra public presets. The public SDK catalog is
-limited to `windows`, `linux`, `docker`, `phantompass` and `seleniumlike`. The CreepJS, PixelScan
-and IPhey JSON variants remain here only so their mapped contracts can be reproduced.
+Esses arquivos JSON são exemplos de validação, e não predefinições públicas adicionais. O catálogo do SDK público
+se limita a `windows`, `linux`, `docker`, `phantompass` e `seleniumlike`. As variantes JSON do CreepJS, PixelScan
+e IPhey permanecem aqui apenas para permitir a reprodução dos contratos mapeados.
 
 ## Comparar uma URL
 
