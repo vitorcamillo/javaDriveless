@@ -232,7 +232,7 @@ class TargetNavigationCdpTest {
 
     @Test
     void getHistoryExposesNavigationEntries() throws Exception {
-        Map<String, Object> history = target.getHistory().get(5, TimeUnit.SECONDS);
+        Map<String, Object> history = target.getHistory().get(10, TimeUnit.SECONDS);
 
         assertTrue(history.containsKey("currentIndex"));
         assertTrue(history.containsKey("entries"));

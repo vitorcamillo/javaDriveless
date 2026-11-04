@@ -41,9 +41,10 @@ final class SdkProfileCatalogLock {
         }
     }
 
-    /** FS default suporta atributos POSIX? (define se o lock nasce 0600) */
-    private static final boolean POSIX_SUPPORTED =
-            java.nio.file.FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+    /** O FS de lockPath suporta atributos POSIX? (define se o lock nasce/restringe a 0600) */
+    private static boolean posixSuportado(Path lockPath) {
+        return lockPath.getFileSystem().supportedFileAttributeViews().contains("posix");
+    }
 
     /**
      * Cria (0600 em FS POSIX) ou abre o arquivo de lock sem seguir symlink.
@@ -70,7 +71,7 @@ final class SdkProfileCatalogLock {
     }
 
     private static FileChannel createNewNoFollow(Path lockPath) throws IOException {
-        if (POSIX_SUPPORTED) {
+        if (posixSuportado(lockPath)) {
             return FileChannel.open(lockPath,
                     Set.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE,
                             LinkOption.NOFOLLOW_LINKS),
@@ -91,6 +92,10 @@ final class SdkProfileCatalogLock {
                     PosixFilePermissions.fromString("rw-------"), LinkOption.NOFOLLOW_LINKS);
         } catch (UnsupportedOperationException nonPosix) {
             // FS sem POSIX: mantém as permissões padrão.
+        } catch (IOException failure) {
+            // Sem fechar aqui, o canal vaza (AccessDenied em lock alheio, NoSuchFile na corrida).
+            channel.close();
+            throw failure;
         }
         return channel;
     }

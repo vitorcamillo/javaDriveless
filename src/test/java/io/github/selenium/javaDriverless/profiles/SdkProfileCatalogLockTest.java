@@ -61,4 +61,24 @@ class SdkProfileCatalogLockTest {
         assertEquals("rw-------",
                 PosixFilePermissions.toString(Files.getPosixFilePermissions(lock)));
     }
+    @Test
+    void permissionFailureClosesAlreadyOpenedChannel(@TempDir Path root) throws Exception {
+        Path path = root.resolve(".catalog.lock");
+        var channel = org.mockito.Mockito.mock(java.nio.channels.FileChannel.class);
+        var failure = new java.io.IOException("permission denied");
+        var permissions = PosixFilePermissions.fromString("rw-------");
+        var method = SdkProfileCatalogLock.class.getDeclaredMethod("openExistingNoFollow", Path.class);
+        method.setAccessible(true);
+        try (var channels = org.mockito.Mockito.mockStatic(java.nio.channels.FileChannel.class);
+             var files = org.mockito.Mockito.mockStatic(Files.class)) {
+            channels.when(() -> java.nio.channels.FileChannel.open(path,
+                    java.nio.file.StandardOpenOption.WRITE, java.nio.file.LinkOption.NOFOLLOW_LINKS))
+                    .thenReturn(channel);
+            files.when(() -> Files.setAttribute(path, "posix:permissions", permissions,
+                    java.nio.file.LinkOption.NOFOLLOW_LINKS)).thenThrow(failure);
+            assertThatThrownBy(() -> method.invoke(null, path)).hasCause(failure);
+            org.mockito.Mockito.verify(channel).close();
+        }
+    }
+
 }

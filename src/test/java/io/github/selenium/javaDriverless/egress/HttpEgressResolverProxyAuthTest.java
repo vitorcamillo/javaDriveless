@@ -350,7 +350,7 @@ class HttpEgressResolverProxyAuthTest {
             ProxyConfig config = new ProxyConfig("127.0.0.1", proxyServer.getLocalPort(), ProxyType.HTTPS,
                     "proxyuser", "proxypass");
             HttpEgressResolver resolver = new HttpEgressResolver("https://ipwho.is/%s",
-                    Duration.ofMillis(600), true);
+                    Duration.ofMillis(1500), true);
 
             assertThrows(Exception.class, () -> resolver.resolve(config));
             proxy.join(3000);

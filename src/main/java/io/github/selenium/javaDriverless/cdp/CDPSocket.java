@@ -311,10 +311,10 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
             }
 
             String message = objectMapper.writeValueAsString(command);
-            send(message);
 
-            // Aplica timeout
-            float effectiveTimeout = (timeout != null) ? timeout : this.timeout;
+            // Arma o timeout antes de enviar: se send() bloquear ou falhar, o futuro
+            // sempre completa (nunca fica pendurado até o timeout do chamador).
+            final float effectiveTimeout = (timeout != null) ? timeout : this.timeout;
             if (effectiveTimeout > 0) {
                 CompletableFuture.delayedExecutor((long) (effectiveTimeout * 1000), TimeUnit.MILLISECONDS)
                     .execute(() -> {
@@ -329,12 +329,17 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
                     });
             }
 
+            send(message);
+
         } catch (JsonProcessingException e) {
             pendingCommands.remove(id);
             future.completeExceptionally(new CDPException("Erro ao serializar comando CDP", e));
         } catch (StackOverflowError e) {
             pendingCommands.remove(id);
             future.completeExceptionally(new CDPException("Erro ao serializar comando CDP", e));
+        } catch (RuntimeException e) {
+            pendingCommands.remove(id);
+            future.completeExceptionally(new CDPException("Erro ao enviar comando CDP", e));
         }
 
         return offReaderThread(future);

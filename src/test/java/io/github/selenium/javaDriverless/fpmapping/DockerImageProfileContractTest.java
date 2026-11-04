@@ -59,8 +59,8 @@ class DockerImageProfileContractTest {
         assertThat(profileDocs)
                 .contains(
                         "docker compose run --rm --build javadriveless-proof",
-                        "A plain `docker run` with Docker's default seccomp profile",
-                        "work around that condition with `--no-sandbox`")
+                        "Um `docker run` simples com o perfil seccomp padrão do",
+                        "não contorne essa condição com `--no-sandbox`")
                 .doesNotContain("docker run --rm javadriveless-docker-profile:test");
         assertThat(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(seccomp)))
                 .isEqualTo("4f39b0464c73569afbf72c7ab4db967913896052f257e62fee5503157254e7a6");

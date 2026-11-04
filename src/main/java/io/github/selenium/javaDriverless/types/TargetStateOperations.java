@@ -220,10 +220,11 @@ abstract class TargetStateOperations extends TargetCaptureOperations {
         return executeCdpCmd("Page.getNavigationHistory", null, null)
             .thenApply(result -> {
                 Map<String, Object> history = new HashMap<>();
-                history.put("currentIndex", result.get("currentIndex").asInt());
+                JsonNode safeResult = result != null ? result : objectMapper.createObjectNode();
+                history.put("currentIndex", safeResult.path("currentIndex").asInt(0));
 
                 List<Map<String, Object>> entries = new ArrayList<>();
-                JsonNode entriesNode = result.get("entries");
+                JsonNode entriesNode = safeResult.path("entries");
                 for (JsonNode entry : entriesNode) {
                     Map<String, Object> entryMap = new HashMap<>();
                     entry.fields().forEachRemaining(field ->

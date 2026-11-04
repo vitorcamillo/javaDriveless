@@ -108,6 +108,49 @@ class CDPSocketTransportTest {
     }
 
     @Test
+    void synchronousSendFailureCompletesCommandFutureWithCdpException() {
+        CDPSocket failingSend = new CDPSocket(server.pageWsUrl(), 5f, 1024) {
+            @Override
+            public void send(String text) {
+                throw new IllegalStateException("falha síncrona de transporte");
+            }
+        };
+        failingSend.connectAsync().join();
+
+        CompletableFuture<JsonNode> future = failingSend.exec("Test.sendFailure", Map.of(), 5f);
+        Exception thrown = assertThrows(Exception.class, future::join);
+
+        assertTrue(future.isCompletedExceptionally());
+        assertTrue(thrown.getCause() instanceof CDPException);
+        assertTrue(thrown.getCause().getCause() instanceof IllegalStateException);
+        failingSend.close();
+    }
+
+    @Test
+    void targetHistoryWithoutResultReturnsEmptyHistory() {
+        server.setCustomHandler((conn, req) -> {
+            int id = req.path("id").asInt();
+            if ("Page.getNavigationHistory".equals(req.path("method").asText())) {
+                conn.send("{\"id\":" + id + "}");
+            } else {
+                conn.send("{\"id\":" + id + ",\"result\":{}}");
+            }
+        });
+        io.github.selenium.javaDriverless.types.Target target =
+            new io.github.selenium.javaDriverless.types.Target("127.0.0.1:" + server.port(),
+                "tid-empty-history", null, null, false, 5f, null, false, 1024);
+        try {
+            target.init().join();
+            Map<String, Object> history = target.getHistory().join();
+
+            assertEquals(0, history.get("currentIndex"));
+            assertTrue(((java.util.List<?>) history.get("entries")).isEmpty());
+        } finally {
+            target.getSocket().close();
+        }
+    }
+
+    @Test
     void serverErrorFailsTheCommandFuture() {
         socket.connectAsync().join();
 
