@@ -1,10 +1,10 @@
-# Security policy
+# Política de segurança
 
-Do not report a suspected vulnerability with credentials, cookies, personal data,
-or a working exploit against a third-party service. Open a private security report
-through the repository's GitHub security channel when available, or contact the
-maintainers privately through the account profile.
+Não reporte uma suspeita de vulnerabilidade com credenciais, cookies, dados pessoais
+ou um exploit funcional contra um serviço de terceiros. Abra um relatório privado
+de segurança pelo canal de segurança do GitHub do repositório, quando disponível,
+ou contate os mantenedores em privado pelo perfil da conta.
 
-When testing, use a disposable browser profile and a local or synthetic target.
-Never commit `.env` files, proxy passwords, session exports, Chrome profiles,
-screenshots, logs, or generated archives.
+Ao testar, use um perfil descartável do navegador e um alvo local ou sintético.
+Nunca faça commit de arquivos `.env`, senhas de proxy, exportações de sessão,
+perfis do Chrome, screenshots, logs ou arquivos gerados.

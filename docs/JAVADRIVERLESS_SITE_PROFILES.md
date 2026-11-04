@@ -1,14 +1,14 @@
-# JavaDriverless Site Profiles
+# Perfis de sites do JavaDriverless
 
-Use site profiles when a website needs a narrower browser surface than the
-default fingerprint mapping suite. The goal is to isolate what differs from a
-working Selenium/Chrome run without removing protections globally.
+Use perfis de site quando um site precisar de uma superfície de navegador mais restrita que a
+suíte padrão de mapeamento de fingerprint. O objetivo é isolar o que difere de uma execução
+funcional com Selenium/Chrome sem remover proteções globalmente.
 
 These JSON files are validation fixtures, not extra public presets. The public SDK catalog is
 limited to `windows`, `linux`, `docker`, `phantompass` and `seleniumlike`. The CreepJS, PixelScan
 and IPhey JSON variants remain here only so their mapped contracts can be reproduced.
 
-## Compare one URL
+## Comparar uma URL
 
 ```bash
 python3 tools/compare_site_modes.py \
@@ -17,26 +17,26 @@ python3 tools/compare_site_modes.py \
   --fingerprint-profile docs/site-profiles/selenium-like.json
 ```
 
-The report is written to:
+O relatório é gravado em:
 
 ```text
 captures/fingerprint-comparison/<session>/mode-diff.md
 ```
 
-It compares `selenium-pure` and `java-driverless` artifacts:
+Ele compara os artefatos `selenium-pure` e `java-driverless`:
 
-- final URL and title
-- body length
-- navigator values
-- raw fingerprint signals
-- detection hints
+- URL final e título
+- tamanho do corpo
+- valores do navigator
+- sinais brutos de fingerprint
+- indícios de detecção
 
-By default the same command also captures `selenium-driverless`. When that
-artifact exists, the report uses it as the baseline against `java-driverless`,
-because that is the closest comparison for sites where Python
-`selenium-driverless` works but JavaDriverless does not.
+Por padrão, o mesmo comando também captura `selenium-driverless`. Quando esse artefato
+existe, o relatório o usa como base de comparação com `java-driverless`, pois essa é a
+comparação mais próxima para sites nos quais o `selenium-driverless` do Python funciona,
+mas o JavaDriverless não.
 
-If you need the same proxy on the Python baseline:
+Se precisar do mesmo proxy na base Python:
 
 ```bash
 python3 tools/compare_site_modes.py \
@@ -46,25 +46,25 @@ python3 tools/compare_site_modes.py \
   --selenium-driverless-proxy http://127.0.0.1:8899
 ```
 
-## Selenium-like profile
+## Perfil semelhante ao Selenium
 
-`docs/site-profiles/selenium-like.json` keeps the main JavaDriverless runtime,
-but sets the configurable fingerprint surfaces to native/real modes:
+`docs/site-profiles/selenium-like.json` mantém o runtime principal do JavaDriverless,
+mas define as superfícies configuráveis de fingerprint nos modos nativo/real:
 
 - `webRtc.mode = real`
 - `ports.mode = real`
 - `speech.mode = real`
 - `connection.mode = real`
 - `screen/webgl/media/audio/canvas/clientRects/fonts = real`
-- `timezoneId = ""` so Chrome keeps the native timezone unless overridden by
-  `--timezone` or `--profile-country`
+- `timezoneId = ""` para que o Chrome mantenha o fuso horário nativo, salvo sobrescrita por
+  `--timezone` ou `--profile-country`
 
-This is the fixture behind the explicit `seleniumlike` compatibility preset. It intentionally
-keeps `legacy-spoof`; WebRTC is real with UDP enabled and the omitted storage mode resolves to the
-legacy `spoof` default. Therefore it is useful for A/B diagnosis, but it is not an anti-leak preset
-and is never selected automatically.
+Esta é a fixture por trás do preset de compatibilidade explícito `seleniumlike`. Ela mantém
+intencionalmente `legacy-spoof`; o WebRTC é real com UDP habilitado e o modo de armazenamento
+omitido resolve para o padrão legado `spoof`. Por isso, ela é útil para diagnóstico A/B, mas não
+é um preset anti-vazamento e nunca é selecionada automaticamente.
 
-Run a mapped site with it:
+Execute um site mapeado com ela:
 
 ```bash
 python3 tools/fingerprint_site_capture.py java-driverless \
@@ -73,7 +73,7 @@ python3 tools/fingerprint_site_capture.py java-driverless \
   --fingerprint-profile docs/site-profiles/selenium-like.json
 ```
 
-For proxy/geo tests, keep the profile but pass explicit location:
+Para testes de proxy/geolocalização, mantenha o perfil, mas passe a localização explicitamente:
 
 ```bash
 python3 tools/fingerprint_site_capture.py java-driverless \
@@ -87,21 +87,21 @@ python3 tools/fingerprint_site_capture.py java-driverless \
   --languages de-DE,de,en-US,en
 ```
 
-## Linux Docker server profile
+## Perfil de servidor Linux Docker
 
-`docs/site-profiles/linux-docker-server.json` is a retained compatibility fixture for
-old headless Linux experiments. It uses the legacy spoof policy;
-it is not evidence that the wrapper-free `minimal-cdp` policy is safe in pure
-Chrome headless. It keeps the Chrome version dynamic (`browserVersion = ""`),
-so JavaDriverless resolves the version from the browser binary at startup
-instead of freezing a stale version in the JSON.
+`docs/site-profiles/linux-docker-server.json` é uma fixture de compatibilidade mantida para
+experimentos antigos com Linux headless. Ela usa a política legada de spoofing; não é evidência
+de que a política `minimal-cdp` sem wrappers seja segura no Chrome headless puro. A versão do
+Chrome permanece dinâmica (`browserVersion = ""`), então o JavaDriverless resolve a versão a
+partir do binário do navegador na inicialização, em vez de congelar uma versão antiga no JSON.
 
-The official image no longer selects this file. Its default is the canonical `docker` preset,
-`JAVA_DRIVERLESS_HEADLESS=0`, launched as the unprivileged `javadriveless` user through
-`java-driverless-visible-xvfb`. The canonical path keeps Chrome's sandbox enabled and does not add
-`--no-sandbox` or `--disable-setuid-sandbox`; those flags remain only in explicit legacy helpers.
+A imagem oficial não seleciona mais este arquivo. O padrão é o preset canônico `docker`,
+`JAVA_DRIVERLESS_HEADLESS=0`, iniciado como o usuário sem privilégios `javadriveless` por meio do
+`java-driverless-visible-xvfb`. O caminho canônico mantém o sandbox do Chrome habilitado e não
+adiciona `--no-sandbox` nem `--disable-setuid-sandbox`; essas flags permanecem apenas em helpers
+legados explícitos.
 
-Use it with the container-safe runtime flags:
+Use-o com as flags de runtime seguras para contêiner:
 
 ```bash
 JAVA_DRIVERLESS_HEADLESS=1 \
@@ -114,38 +114,39 @@ python3 tools/fingerprint_site_capture.py java-driverless \
   --fingerprint-profile docs/site-profiles/linux-docker-server.json
 ```
 
-For site-specific Docker/headless runtime experiments, Chrome default
-arguments can be adjusted without changing normal behavior:
+Para experimentos de runtime Docker/headless específicos de um site, os argumentos padrão
+do Chrome podem ser ajustados sem alterar o comportamento normal:
 
 ```bash
 JAVA_DRIVERLESS_REMOVE_DEFAULT_ARGS='--disable-accelerated-2d-canvas,--mute-audio'
 JAVA_DRIVERLESS_EXTRA_ARGS='--enable-accelerated-2d-canvas;--use-angle=swiftshader'
 ```
 
-`JAVA_DRIVERLESS_REMOVE_DEFAULT_ARGS` is comma/semicolon/newline separated and
-matches full arguments or prefixes. `JAVA_DRIVERLESS_EXTRA_ARGS` is
-semicolon/newline separated so arguments containing commas remain intact.
-Leave both unset for the existing defaults.
-Managed storage, debugger and proxy flags are rejected in `JAVA_DRIVERLESS_EXTRA_ARGS`; configure
-them through the structured storage/proxy APIs so one global environment value cannot make two
-client profiles share cookies or expose the debugger. `minimal-cdp` also rejects SwiftShader and
-`--disable-gpu` after all effective arguments have been assembled and revalidates before launch.
+`JAVA_DRIVERLESS_REMOVE_DEFAULT_ARGS` é separado por vírgula, ponto e vírgula ou nova linha e
+compara argumentos completos ou prefixos. `JAVA_DRIVERLESS_EXTRA_ARGS` é separado por
+ponto e vírgula ou nova linha para que argumentos que contêm vírgulas permaneçam intactos.
+Deixe ambos sem definição para manter os padrões atuais.
+Flags de armazenamento gerenciado, debugger e proxy são rejeitadas em `JAVA_DRIVERLESS_EXTRA_ARGS`; configure-as
+pelas APIs estruturadas de armazenamento/proxy para que um único valor global de ambiente não faça dois
+perfis de cliente compartilharem cookies nem exponha o debugger. `minimal-cdp` também rejeita SwiftShader e
+`--disable-gpu` depois de montar todos os argumentos efetivos e revalida tudo antes da inicialização.
 
-For `minimal-cdp`, do not use this pure-headless command. Use the visible Xvfb
-launcher documented below.
+Para `minimal-cdp`, não use este comando headless puro. Use o launcher visível do Xvfb
+documentado abaixo.
 
-### Wrapper-free policy for PhantomPass/SDK profiles
+### Política sem wrappers para perfis PhantomPass/SDK
 
-Old persisted custom profiles remain readable with their legacy policy, but all new official
-Windows/Linux/Docker presets are fixed to `minimal-cdp`. The generator accepts only the five
-canonical names and prepares modes backed by CDP, Chrome arguments/preferences or the real OS:
+Perfis personalizados antigos e persistidos continuam legíveis com sua política legada, mas todos
+os novos presets oficiais Windows/Linux/Docker são fixados em `minimal-cdp`. O gerador aceita
+somente os cinco nomes canônicos e prepara modos apoiados por CDP, argumentos/preferências do
+Chrome ou pelo sistema operacional real:
 
 ```java
 SdkProfile profile = SdkProfilePresets.linux(
         "account-123", "Account 123", "BR");
 ```
 
-For the SaaS adapter:
+Para o adaptador SaaS:
 
 ```java
 PhantomPassProfile contract = SdkProfilePresets.phantomPass(
@@ -155,43 +156,43 @@ contract.egressInfo = knownEgress;
 ChromeOptions options = ProfileChromeOptionsFactory.fromPhantomPass(contract);
 ```
 
-`minimal-cdp` rejects `diversityEnabled=true` because canvas/audio/DOMRect/WebGL noise requires
-detectable JavaScript wrappers. Visible Windows/Linux presets use the real OS screen;
-pure headless is rejected before Chrome starts. A server or container without a physical display
-must run Chrome in visible mode under the validated Xvfb launcher below. Cross-OS and mobile
-identities fail before Chrome instead of silently exposing the host.
+`minimal-cdp` rejeita `diversityEnabled=true` porque o ruído de canvas/áudio/DOMRect/WebGL exige
+wrappers JavaScript detectáveis. Os presets Windows/Linux visíveis usam a tela real do sistema;
+o headless puro é rejeitado antes de o Chrome iniciar. Um servidor ou contêiner sem tela física
+deve executar o Chrome no modo visível sob o launcher Xvfb validado abaixo. Identidades de outro
+sistema operacional ou móveis falham antes do Chrome, em vez de expor o host silenciosamente.
 `minimal-cdp` também rejeita attach a um Chrome externo já iniciado: nesse fluxo não é possível
 provar as flags de launch nem a identidade do primeiro statement de pages/workers existentes.
 O attach de compatibilidade continua disponível com `legacy-spoof` e preserva ownership externo.
 
-### Operational matrix — 2026-07-14
+### Matriz operacional — 2026-07-14
 
-| Runtime | `minimal-cdp` state | Evidence and required operation |
+| Runtime | estado de `minimal-cdp` | Evidência e operação exigida |
 | --- | --- | --- |
-| Windows, visible Chrome | Contract-supported; live gate prepared | The Windows runner is required to validate both `windows` and `phantompass` presets across page, DedicatedWorker, `rel=noopener` popup and the popup worker. This Linux checkout only compiles/skips that gate, so do not label the path live-validated until the Windows job passes. |
-| Linux, visible Chrome | Supported baseline | Raw Chrome 150 returned the same native classic UA and complete high-entropy UA-CH in the page, DedicatedWorker and SharedWorker. Keep the profile on the native Linux OS/architecture. |
-| Docker, visible Chrome under Xvfb | Validated server path | The CreepJS Docker/Xvfb capture produced 16/16 required fields, 24/24 expected matches and 0 reported lies. The 24 comparisons include nine main-realm WebGL fields and exact main/worker GPU parity. A separate two-process live test required complete, equal UA-CH and WebGL in the page, DedicatedWorker, SharedWorker, ServiceWorker and the ServiceWorker first statement, plus `navigator.webdriver=false` in both pages. This is the canonical no-physical-UI path. |
-| Linux or Docker, pure Chrome headless | Rejected fail-closed | Raw Chrome exposed `HeadlessChrome` and SwiftShader. Hiding the classic token did not preserve a complete worker UA-CH identity. |
-| Any OS, `legacy-spoof` headless | Compatibility path outside this matrix | It may use synthetic/wrapper behavior. Passing its smoke test is not proof that `minimal-cdp` or every detector is clean. |
+| Windows, Chrome visível | Contrato suportado; gate live preparado | O runner Windows é necessário para validar os presets `windows` e `phantompass` na página, no DedicatedWorker, no popup `rel=noopener` e no worker do popup. Este checkout Linux apenas compila/pula esse gate; não classifique o caminho como validado ao vivo até o job Windows passar. |
+| Linux, Chrome visível | Baseline suportado | O Chrome 150 bruto retornou a mesma UA clássica nativa e UA-CH completa de alta entropia na página, no DedicatedWorker e no SharedWorker. Mantenha o perfil no sistema operacional/arquitetura Linux nativos. |
+| Docker, Chrome visível sob Xvfb | Caminho de servidor validado | A captura CreepJS Docker/Xvfb produziu 16/16 campos obrigatórios, 24/24 correspondências esperadas e 0 mentiras reportadas. As 24 comparações incluem nove campos WebGL do realm principal e paridade exata da GPU entre página e worker. Um teste live separado com dois processos exigiu UA-CH e WebGL completos e iguais na página, DedicatedWorker, SharedWorker, ServiceWorker e no primeiro statement do ServiceWorker, além de `navigator.webdriver=false` nas duas páginas. Este é o caminho canônico sem UI física. |
+| Linux ou Docker, Chrome headless puro | Rejeitado em fail-closed | O Chrome bruto expôs `HeadlessChrome` e SwiftShader. Ocultar o token clássico não preservou uma identidade UA-CH completa no worker. |
+| Qualquer SO, headless `legacy-spoof` | Caminho de compatibilidade fora desta matriz | Ele pode usar comportamento sintético/com wrappers. Passar no smoke test não prova que `minimal-cdp` ou todo detector esteja limpo. |
 
-The Xvfb launcher runs a visible Chrome process on an isolated virtual X11 display. “No physical
-UI” and “Chrome headless” are different modes here. Validate the launcher contract with:
+O launcher Xvfb executa um processo Chrome visível em uma tela X11 virtual isolada. “Sem UI física”
+e “Chrome headless” são modos diferentes aqui. Valide o contrato do launcher com:
 
 ```bash
 bash scripts/test-run-visible-xvfb.sh
 ```
 
-Run the mapped CreepJS profile on Linux without a physical UI with this paste-safe command:
+Execute o perfil CreepJS mapeado no Linux sem UI física com este comando seguro para colar:
 
 ```bash
 bash scripts/run-visible-xvfb.sh --screen-width 1365 --screen-height 900 --avail-width 1365 --avail-height 860 -- python3 tools/fingerprint_site_capture.py java-driverless --session creepjs-xvfb-check --sites creepjs --fingerprint-profile docs/site-profiles/linux-docker-server-creepjs-xvfb.json --profile-country BR
 ```
 
-### PixelScan in Docker/Xvfb
+### PixelScan no Docker/Xvfb
 
-PixelScan compares rendered hashes against the visible browser surface. In
-Docker/Xvfb, spoofing a desktop GPU while Chrome renders through Mesa/llvmpipe
-is detected as masking. Use the native-rendering site profile for this site:
+O PixelScan compara hashes renderizados com a superfície visível do navegador. No
+Docker/Xvfb, simular uma GPU de desktop enquanto o Chrome renderiza por Mesa/llvmpipe
+é detectado como mascaramento. Use o perfil de site com renderização nativa para este site:
 
 ```bash
 docker run --rm --network host \
@@ -221,24 +222,24 @@ normalizados no host e só então aceite o resultado:
 python3 tools/fingerprint_site_capture.py enrich --artifacts-root captures/fingerprint-comparison/pixelscan-docker-check-UNIQUE/java-driverless
 ```
 
-Replace `UNIQUE` in both PixelScan commands before every capture.
+Substitua `UNIQUE` nos dois comandos do PixelScan antes de cada captura.
 
-The mounted font directory is intentional: the green PixelScan Docker/Xvfb
-capture depends on a stable, non-minimal Linux font surface. Without that
-surface, PixelScan reports `Masking detected` even when timezone, WebRTC,
-language, and rendering mode are coherent.
+O diretório de fontes montado é intencional: a captura verde do PixelScan no Docker/Xvfb
+depende de uma superfície de fontes Linux estável e não mínima. Sem essa superfície,
+o PixelScan reporta `Masking detected` mesmo quando o fuso horário, WebRTC, idioma e
+modo de renderização são coerentes.
 
-When a HTTP, HTTPS or SOCKS proxy is configured, the external-profile resolver
-does not enable native WebRTC for PixelScan or IPHey. STUN uses UDP outside
-those proxy transports and was proven to expose host egress. The proxied path
-therefore inherits the base profile's relay-only/fail-closed policy. A missing
-WebRTC value is accepted only with `disableUdp=true`; a rendered address must
-still belong to the measured egress allowlist. WebRTC through a proxy requires
-a separately controlled TURN relay, not a JavaScript replacement.
+Quando um proxy HTTP, HTTPS ou SOCKS é configurado, o resolver de perfil externo
+não habilita WebRTC nativo para PixelScan ou IPHey. O STUN usa UDP fora desses
+transportes de proxy e foi comprovado que expõe o egress do host. Por isso, o
+caminho com proxy herda a política relay-only/fail-closed do perfil base. Um
+valor ausente de WebRTC só é aceito com `disableUdp=true`; um endereço renderizado
+ainda precisa pertencer à allowlist de egress medida. WebRTC por proxy exige
+um relay TURN controlado separadamente, não uma substituição em JavaScript.
 
-CreepJS uses a separate Docker/Xvfb profile because its headless-resistance
-score also checks CSS color-scheme, media permissions, speech voices, and
-worker hardware consistency:
+O CreepJS usa um perfil Docker/Xvfb separado porque sua pontuação de resistência a headless
+também verifica o esquema de cores CSS, permissões de mídia, vozes de fala e consistência
+de hardware dos workers:
 
 ```bash
 docker run --rm --network host \
@@ -261,11 +262,11 @@ docker run --rm --network host \
         --profile-country BR"'
 ```
 
-The visible launcher starts an isolated Xvfb, publishes and reads back
-`_NET_WORKAREA`, then exposes the internal native-screen handshake to Java only after that
-validation. Do not set `JAVA_DRIVERLESS_NATIVE_SCREEN_PROVISIONED` manually.
-Replace `UNIQUE` before every capture; capture sessions are immutable evidence and must not be
-reused or enriched over an older result.
+O launcher visível inicia um Xvfb isolado, publica e lê de volta `_NET_WORKAREA` e só então
+expõe o handshake interno da tela nativa ao Java, depois dessa validação. Não defina
+`JAVA_DRIVERLESS_NATIVE_SCREEN_PROVISIONED` manualmente.
+Substitua `UNIQUE` antes de cada captura; sessões de captura são evidências imutáveis e não
+devem ser reutilizadas nem enriquecidas sobre um resultado antigo.
 
 Na captura Docker/Xvfb validada, o CreepJS ainda mostrou `31% like headless`; os contadores
 `headless` e `stealth` ficaram em 0%, não houve seção marcada como lie e o contrato não encontrou
@@ -303,57 +304,60 @@ e o renderer precisam coincidir com o Worker; divergência produz
 `creepjs-webgl-realm-mismatch`. Os mesmos valores normalizados ficam em
 `extracted-values.json.contractExtracted.webgl`.
 
-The CreepJS profile uses `runtimePolicy: "minimal-cdp"`: it installs no page/worker surface
-wrappers and fails before Chrome when a configured mode has no native CDP/Chrome/OS transport.
-It intentionally sets `colorScheme: "dark"` via CDP
-`Emulation.setEmulatedMedia`. In Docker/Xvfb, the browser otherwise reports a
-light preferred color scheme and CreepJS classifies that as a `like headless`
-signal. Rendering, fonts, storage, connection, media devices and speech remain native.
-`hardwareConcurrency` and `deviceMemory` must remain native and coherent in every realm. CPU quotas
-are reflected in the native runtime baseline. A finite cgroup memory limit remains fail-closed by
-default because Chrome 150 reports host `navigator.deviceMemory` inside such a container and
-provides no native global override. A managed launcher may continue only after opening the same
-Chrome under the same display/cgroup, measuring `navigator.deviceMemory` on loopback and exporting
-the matching native-memory attestation. The engine compares that value with the profile and passes
-the same explicit environment to Chrome; do not set either attestation variable manually.
+O perfil CreepJS usa `runtimePolicy: "minimal-cdp"`: não instala wrappers de superfície na página
+ou nos workers e falha antes do Chrome quando um modo configurado não tem transporte nativo de
+CDP/Chrome/SO. Ele define intencionalmente `colorScheme: "dark"` via CDP
+`Emulation.setEmulatedMedia`. No Docker/Xvfb, o navegador reportaria caso contrário um esquema de
+cores preferido claro, que o CreepJS classifica como sinal `like headless`. Renderização, fontes,
+armazenamento, conexão, dispositivos de mídia e fala permanecem nativos.
+`hardwareConcurrency` e `deviceMemory` precisam permanecer nativos e coerentes em todos os realms.
+As cotas de CPU são refletidas no baseline nativo de runtime. Um limite finito de memória do cgroup
+permanece fail-closed por padrão porque o Chrome 150 reporta o `navigator.deviceMemory` do host
+dentro desse contêiner e não fornece uma sobrescrita global nativa. Um launcher gerenciado só pode
+continuar depois de abrir o mesmo Chrome na mesma tela/cgroup, medir `navigator.deviceMemory` no
+loopback e exportar o atestado de memória nativa correspondente. O engine compara esse valor com o
+perfil e passa o mesmo ambiente explícito ao Chrome; não defina manualmente nenhuma das variáveis
+de atestação.
 
-That attestation proves consistency, not host isolation. In the validated 4 GiB container, Chrome
-reported `navigator.deviceMemory=32` and `navigator.hardwareConcurrency=16`. Both native values
-are observable and potentially linkable host characteristics and must not be described as “no
-leak”. Standard Docker did not provide a strong isolation boundary for them. Eliminating that
-disclosure without detectable JavaScript wrappers requires a VM/microVM with the intended guest
-memory and CPU topology (or a future native Chrome mechanism).
+Esse atestado prova consistência, não isolamento do host. No contêiner validado de 4 GiB, o Chrome
+reportou `navigator.deviceMemory=32` e `navigator.hardwareConcurrency=16`. Ambos os valores nativos
+são observáveis e potencialmente vinculáveis às características do host e não devem ser descritos
+como “sem vazamento”. O Docker padrão não forneceu uma fronteira de isolamento forte para eles.
+Eliminar essa divulgação sem wrappers JavaScript detectáveis exige uma VM/microVM com a memória e
+a topologia de CPU de guest pretendidas (ou um mecanismo nativo futuro do Chrome).
 
-The repository also includes a Docker proof target:
+O repositório também inclui um alvo de prova Docker:
 
 ```bash
 docker compose run --rm --build javadriveless-proof
 ```
 
-The checked-in Compose service applies the Chrome seccomp profile, drops all capabilities and adds
-back only `SYS_CHROOT`. A plain `docker run` with Docker's default seccomp profile can deny the
-namespace creation required by Chrome's sandbox and terminate Chrome with exit code `133`; do not
-work around that condition with `--no-sandbox`.
+O serviço Compose versionado aplica o perfil seccomp do Chrome, remove todas as capabilities e
+adiciona de volta apenas `SYS_CHROOT`. Um `docker run` simples com o perfil seccomp padrão do
+Docker pode negar a criação de namespaces exigida pelo sandbox do Chrome e encerrar o Chrome com
+código de saída `133`; não contorne essa condição com `--no-sandbox`.
 
-The default `linux/amd64` image starts the canonical `docker` preset as visible Chrome under its provisioned
-Xvfb display. `DockerRuntimeProof` reads live DOM/runtime values and writes
-`/tmp/java-driverless-docker-proof.json`; it rejects `HeadlessChrome`, `navigator.webdriver=true`,
-missing/mismatched locale, languages, timezone, hardware, device memory, screen/workarea/depth/DPR,
-literal-IP WebRTC candidates, missing WebGL and SwiftShader under `minimal-cdp`. The proof page is
-served from loopback HTTP so secure-context-only properties such as `deviceMemory` are observed.
-It does not claim to measure proxy DNS egress without a controlled resolver. The site-specific
-CreepJS command above remains the broader detector contract; the image smoke alone is not a
-universal anti-detection claim.
+A imagem padrão `linux/amd64` inicia o preset canônico `docker` com Chrome visível sob sua tela
+Xvfb provisionada. `DockerRuntimeProof` lê valores reais do DOM/runtime e grava
+`/tmp/java-driverless-docker-proof.json`; ele rejeita `HeadlessChrome`, `navigator.webdriver=true`,
+locale, idiomas, fuso horário, hardware, memória do dispositivo, tela/área de trabalho/profundidade/DPR
+ausentes ou divergentes, candidatos WebRTC com IP literal, WebGL ausente e SwiftShader sob
+`minimal-cdp`. A página de prova é servida por HTTP no loopback para que propriedades que exigem
+contexto seguro, como `deviceMemory`, sejam observadas.
+Ele não afirma medir o egress DNS do proxy sem um resolver controlado. O comando CreepJS específico
+do site acima continua sendo o contrato mais amplo do detector; o smoke da imagem, sozinho, não é
+uma alegação universal de anti-detecção.
 
-The external fingerprint workflow supplies that missing controlled environment itself: an
-ephemeral loopback-only recursive Unbound resolver, an HTTPS DoH bridge, an execution-scoped NSS
-certificate, and a managed Chrome secure-DNS policy. Resolver IP/prefix, ISP aliases, and location
-are established before site navigation from Akamai Whoami, RIPE RIS, and an independent GeoIP
-quorum. The gate also checks the DoH query counter after Chrome exits, so a green BrowserLeaks DNS
-contract requires both attributed site results and proven use of the controlled transport.
+O workflow de fingerprint externo fornece esse ambiente controlado ausente: um resolver Unbound
+recursivo e efêmero restrito ao loopback, uma ponte DoH HTTPS, um certificado NSS limitado à execução
+e uma política de DNS seguro gerenciada pelo Chrome. O IP/prefixo do resolver, aliases de ISP e
+localização são estabelecidos antes da navegação no site a partir de Akamai Whoami, RIPE RIS e um
+quórum GeoIP independente. O gate também verifica o contador de consultas DoH depois que o Chrome
+sai, portanto um contrato DNS verde do BrowserLeaks exige resultados atribuídos do site e uso
+comprovado do transporte controlado.
 
-## Rule
+## Regra
 
-Do not change global defaults just because one site fails. First compare the
-site with `tools/compare_site_modes.py`, then create or select the smallest
-site profile that removes the specific difference.
+Não altere os padrões globais apenas porque um site falhou. Primeiro compare o
+site com `tools/compare_site_modes.py`; depois crie ou selecione o menor
+perfil de site que remova a diferença específica.

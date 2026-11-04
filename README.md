@@ -1,23 +1,23 @@
 # Java Driverless
 
-Java browser automation over Chrome DevTools Protocol (CDP), without ChromeDriver.
-The library manages Chrome profiles, navigation, input, cookies, JavaScript, and
-multiple targets through a Java API.
+Automação de navegador em Java pelo Chrome DevTools Protocol (CDP), sem ChromeDriver.
+A biblioteca gerencia perfis do Chrome, navegação, entrada, cookies, JavaScript e
+múltiplos alvos por meio de uma API Java.
 
-This public edition contains no browser profiles, cookies, credentials, proxy
-configuration, or private project data.
+Esta edição pública não contém perfis de navegador, cookies, credenciais,
+configuração de proxy nem dados de projetos privados.
 
-## Requirements
+## Requisitos
 
-- JDK 21 or newer
-- Maven 3.9 or newer
-- Google Chrome or Chromium with a desktop display for browser tests
+- JDK 21 ou mais recente
+- Maven 3.9 ou mais recente
+- Google Chrome ou Chromium com uma tela de desktop para os testes de navegador
 
-The default test suite is deterministic and excludes tests tagged `browser`,
-`external`, and `network`. Those tests require an environment you control and
-must be enabled explicitly.
+A suíte de testes padrão é determinística e exclui os testes marcados com `browser`,
+`external` e `network`. Esses testes exigem um ambiente sob seu controle e
+precisam ser habilitados explicitamente.
 
-## Build from source
+## Compilar a partir do código-fonte
 
 ```bash
 git clone https://github.com/vitorcamillo/javaDriveless.git
@@ -26,11 +26,11 @@ mvn -B -ntp clean test
 mvn -B -ntp package
 ```
 
-The source targets `io.github.vitorcamillo:javadriveless:1.12.2`.
-For a local Maven dependency, run `mvn install` in this repository first. This
-repository does not promise that the artifact is available from Maven Central.
+O código-fonte usa `io.github.vitorcamillo:javadriveless:1.12.2`.
+Para usar uma dependência Maven local, execute `mvn install` neste repositório primeiro. Este
+repositório não promete que o artefato esteja disponível no Maven Central.
 
-## Quick start
+## Início rápido
 
 ```java
 import io.github.selenium.javaDriverless.JavaDriverless;
@@ -44,24 +44,25 @@ try {
 }
 ```
 
-Profiles can contain cookies, local storage, and other session data. Do not
-commit the profile directory. Use separate profiles for separate accounts and
-review a service's terms before automating it.
+Os perfis podem conter cookies, armazenamento local e outros dados de sessão. Não
+faça commit do diretório de perfis. Use perfis separados para contas separadas e
+verifique os termos do serviço antes de automatizá-lo.
 
-## Scope and limitations
+## Escopo e limitações
 
-Java Driverless uses a real Chrome/Chromium process and CDP. It does not bypass
-CAPTCHAs, account protections, rate limits, or a website's terms. Proxy and
-fingerprint options are explicit application configuration; credentials should
-be supplied at runtime through a secret manager or environment, never committed.
-Browser behavior depends on the selected profile and host environment.
+O Java Driverless usa um processo real do Chrome/Chromium e CDP. Ele não contorna
+CAPTCHAs, proteções de contas, limites de requisição nem os termos de um site. As
+opções de proxy e fingerprint são configurações explícitas da aplicação; as credenciais
+devem ser fornecidas em tempo de execução por um gerenciador de segredos ou pelo ambiente,
+e nunca devem entrar em commits. O comportamento do navegador depende do perfil
+selecionado e do ambiente do host.
 
-## Related project
+## Projeto relacionado
 
-The public social automation MCP that uses this library is maintained at
+O MCP público de automação de redes sociais que usa esta biblioteca é mantido em
 [`social-mcp`](https://github.com/vitorcamillo/social-mcp).
 
-## License
+## Licença
 
-Java Driverless is MIT licensed. See [`LICENSE`](LICENSE) and
-[`THIRD_PARTY_NOTICES`](THIRD_PARTY_NOTICES) for upstream attribution.
+O Java Driverless usa a licença MIT. Consulte [`LICENSE`](LICENSE) e
+[`THIRD_PARTY_NOTICES`](THIRD_PARTY_NOTICES) para a atribuição ao projeto de origem.
