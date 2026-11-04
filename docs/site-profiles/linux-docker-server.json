@@ -1,0 +1,98 @@
+{
+  "name": "linux-docker-server",
+  "browserVersion": "",
+  "locale": "en-US",
+  "timezoneId": "America/Sao_Paulo",
+  "platform": "Linux x86_64",
+  "uaPlatform": "Linux",
+  "platformVersion": "",
+  "architecture": "x86",
+  "bitness": "64",
+  "mobile": false,
+  "model": "",
+  "wow64": false,
+  "formFactors": ["Desktop"],
+  "languages": ["en-US", "en"],
+  "hardwareConcurrency": 8,
+  "deviceMemory": 8,
+  "maxTouchPoints": 0,
+  "vendor": "Google Inc.",
+  "doNotTrack": false,
+  "colorScheme": "light",
+  "prefersReducedMotion": "no-preference",
+  "prefersReducedTransparency": "no-preference",
+  "prefersContrast": "no-preference",
+  "forcedColors": "none",
+  "screen": {
+    "mode": "spoof",
+    "width": 1365,
+    "height": 900,
+    "availWidth": 1365,
+    "availHeight": 860,
+    "colorDepth": 24,
+    "pixelDepth": 24,
+    "deviceScaleFactor": 1.0
+  },
+  "webgl": {
+    "mode": "spoof",
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Mesa Intel UHD Graphics, OpenGL 4.6)",
+    "unmaskedVendor": "Google Inc. (Intel)",
+    "unmaskedRenderer": "ANGLE (Intel, Mesa Intel UHD Graphics, OpenGL 4.6)"
+  },
+  "webRtc": {
+    "mode": "altered",
+    "protectLocalIps": true,
+    "disableUdp": true,
+    "publicIp": "",
+    "allowedIps": []
+  },
+  "geolocation": {
+    "mode": "override",
+    "latitude": -23.1857,
+    "longitude": -46.8978,
+    "accuracy": 100.0
+  },
+  "permissions": {
+    "geolocation": "profile",
+    "notifications": "default"
+  },
+  "mediaDevices": {
+    "mode": "spoof",
+    "audioInputs": 1,
+    "audioOutputs": 1,
+    "videoInputs": 0
+  },
+  "speech": {
+    "mode": "real",
+    "voices": []
+  },
+  "audio": {
+    "mode": "noise",
+    "noise": 0.00017
+  },
+  "canvas": {
+    "mode": "noise",
+    "noise": 0.0065
+  },
+  "clientRects": {
+    "mode": "noise",
+    "noise": 0.06
+  },
+  "fonts": {
+    "mode": "real",
+    "families": []
+  },
+  "ports": {
+    "mode": "protect",
+    "protectedPorts": [3001, 3389, 5900, 5800, 7070, 6568, 5938, 63333]
+  },
+  "connection": {
+    "mode": "spoof",
+    "effectiveType": "4g",
+    "downlink": 10.0,
+    "rtt": 50,
+    "saveData": false,
+    "type": "wifi"
+  }
+}

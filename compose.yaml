@@ -1,0 +1,17 @@
+services:
+  javadriveless-proof:
+    build:
+      context: .
+    image: javadriveless-five-profiles:local
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_CHROOT
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=./deploy/chrome-seccomp.json
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m,mode=1777
+      - /tmp/.X11-unix:rw,noexec,nosuid,size=1m,mode=1777,uid=0,gid=0

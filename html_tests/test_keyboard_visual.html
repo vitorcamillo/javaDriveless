@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Teste Visual Keyboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 18px;
+            border: 3px solid #ddd;
+            border-radius: 8px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        input:focus, textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        label {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-top: 20px;
+        }
+        #display {
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            min-height: 300px;
+            overflow-y: auto;
+            margin-top: 30px;
+            line-height: 1.6;
+        }
+        .event {
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+        .event.keydown { color: #ff9800; }
+        .event.keyup { color: #4caf50; }
+        .event.input { color: #2196f3; font-weight: bold; }
+        .value-display {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .success { color: #4caf50; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎹 Teste Visual - Keyboard</h1>
+        
+        <label>📝 Campo 1 (teste digitação):</label>
+        <input type="text" id="input1" placeholder="Digite aqui para testar type()...">
+        <div class="value-display">Valor: <span id="value1" class="success">vazio</span></div>
+
+        <label>📝 Campo 2 (teste Tab):</label>
+        <input type="text" id="input2" placeholder="Pressione Tab para vir aqui...">
+        <div class="value-display">Valor: <span id="value2" class="success">vazio</span></div>
+
+        <label>📝 Área de texto (teste Enter):</label>
+        <textarea id="textarea1" rows="4" placeholder="Digite e pressione Enter..."></textarea>
+        <div class="value-display">Valor: <span id="value3" class="success">vazio</span></div>
+
+        <div id="display"></div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        let eventCount = 0;
+
+        function addLog(msg, type = '') {
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = 'event ' + type;
+            div.textContent = `[${time}] ${msg}`;
+            display.appendChild(div);
+            display.scrollTop = display.scrollHeight;
+            eventCount++;
+        }
+
+        function updateValue(id, spanId) {
+            const val = document.getElementById(id).value;
+            document.getElementById(spanId).textContent = val || 'vazio';
+        }
+
+        // Monitora input1
+        const input1 = document.getElementById('input1');
+        input1.addEventListener('keydown', (e) => {
+            addLog(`⬇️  KeyDown: "${e.key}" no input1`, 'keydown');
+        });
+        input1.addEventListener('keyup', (e) => {
+            addLog(`⬆️  KeyUp: "${e.key}" no input1`, 'keyup');
+        });
+        input1.addEventListener('input', (e) => {
+            addLog(`✏️  Input: "${e.target.value}"`, 'input');
+            updateValue('input1', 'value1');
+        });
+        input1.addEventListener('focus', () => {
+            addLog('🎯 FOCUS em input1', 'input');
+        });
+
+        // Monitora input2
+        const input2 = document.getElementById('input2');
+        input2.addEventListener('keydown', (e) => {
+            addLog(`⬇️  KeyDown: "${e.key}" no input2`, 'keydown');
+        });
+        input2.addEventListener('keyup', (e) => {
+            addLog(`⬆️  KeyUp: "${e.key}" no input2`, 'keyup');
+        });
+        input2.addEventListener('input', (e) => {
+            addLog(`✏️  Input: "${e.target.value}"`, 'input');
+            updateValue('input2', 'value2');
+        });
+        input2.addEventListener('focus', () => {
+            addLog('🎯 FOCUS em input2', 'input');
+        });
+
+        // Monitora textarea
+        const textarea1 = document.getElementById('textarea1');
+        textarea1.addEventListener('keydown', (e) => {
+            addLog(`⬇️  KeyDown: "${e.key}" no textarea`, 'keydown');
+        });
+        textarea1.addEventListener('keyup', (e) => {
+            addLog(`⬆️  KeyUp: "${e.key}" no textarea`, 'keyup');
+        });
+        textarea1.addEventListener('input', (e) => {
+            addLog(`✏️  Input: "${e.target.value.substring(0, 30)}..."`, 'input');
+            updateValue('textarea1', 'value3');
+        });
+        textarea1.addEventListener('focus', () => {
+            addLog('🎯 FOCUS em textarea', 'input');
+        });
+
+        // Monitora Ctrl+A global
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'a') {
+                addLog('🔥🔥🔥 CTRL+A DETECTADO! 🔥🔥🔥', 'input');
+            }
+        });
+
+        addLog('✅ Página carregada e monitorando eventos!', 'input');
+        addLog('📌 Foque no input1 para começar', '');
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,102 @@
+{
+  "name": "linux-docker-server-creepjs-xvfb",
+  "runtimePolicy": "minimal-cdp",
+  "browserVersion": "",
+  "locale": "en-US",
+  "timezoneId": "America/New_York",
+  "platform": "Linux x86_64",
+  "uaPlatform": "Linux",
+  "platformVersion": "",
+  "architecture": "x86",
+  "bitness": "64",
+  "mobile": false,
+  "model": "",
+  "wow64": false,
+  "formFactors": ["Desktop"],
+  "languages": ["en-US", "en"],
+  "hardwareConcurrency": 16,
+  "deviceMemory": 32,
+  "maxTouchPoints": 0,
+  "vendor": "Google Inc.",
+  "doNotTrack": false,
+  "colorScheme": "dark",
+  "prefersReducedMotion": "no-preference",
+  "prefersReducedTransparency": "no-preference",
+  "prefersContrast": "no-preference",
+  "forcedColors": "none",
+  "screen": {
+    "mode": "spoof",
+    "width": 1365,
+    "height": 900,
+    "availWidth": 1365,
+    "availHeight": 860,
+    "colorDepth": 24,
+    "pixelDepth": 24,
+    "deviceScaleFactor": 1.0
+  },
+  "webgl": {
+    "mode": "real",
+    "vendor": "Google Inc. (Mesa)",
+    "renderer": "ANGLE (Mesa, llvmpipe (LLVM 20.1.2 256 bits), OpenGL 4.5)",
+    "unmaskedVendor": "Google Inc. (Mesa)",
+    "unmaskedRenderer": "ANGLE (Mesa, llvmpipe (LLVM 20.1.2 256 bits), OpenGL 4.5)"
+  },
+  "webRtc": {
+    "mode": "altered",
+    "protectLocalIps": true,
+    "disableUdp": true,
+    "publicIp": "",
+    "allowedIps": []
+  },
+  "geolocation": {
+    "mode": "override",
+    "latitude": 40.7128,
+    "longitude": -74.006,
+    "accuracy": 100.0
+  },
+  "permissions": {
+    "geolocation": "profile",
+    "notifications": "default"
+  },
+  "mediaDevices": {
+    "mode": "real",
+    "audioInputs": 1,
+    "audioOutputs": 1,
+    "videoInputs": 0
+  },
+  "speech": {
+    "mode": "auto",
+    "voices": []
+  },
+  "audio": {
+    "mode": "real",
+    "noise": 0
+  },
+  "canvas": {
+    "mode": "real",
+    "noise": 0
+  },
+  "clientRects": {
+    "mode": "real",
+    "noise": 0
+  },
+  "storage": {
+    "mode": "real"
+  },
+  "fonts": {
+    "mode": "real",
+    "families": []
+  },
+  "ports": {
+    "mode": "real",
+    "protectedPorts": [3001, 3389, 5900, 5800, 7070, 6568, 5938, 63333]
+  },
+  "connection": {
+    "mode": "real",
+    "effectiveType": "4g",
+    "downlink": 10.0,
+    "rtt": 50,
+    "saveData": false,
+    "type": "wifi"
+  }
+}

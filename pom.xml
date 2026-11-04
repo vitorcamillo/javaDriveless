@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.vitorcamillo</groupId>
+    <artifactId>javadriveless</artifactId>
+    <version>1.12.2</version>
+    <packaging>jar</packaging>
+
+    <name>Java Driverless</name>
+    <description>Automação de navegador sem chromedriver - conversão fiel do Selenium-Driverless Python</description>
+    <url>https://github.com/vitorcamillo/javaDriveless</url>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/vitorcamillo/javaDriveless</url>
+        </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/vitorcamillo/javaDriveless</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Vitor Camillo</name>
+            <url>https://github.com/vitorcamillo</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/vitorcamillo/javaDriveless.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/vitorcamillo/javaDriveless.git</developerConnection>
+        <url>https://github.com/vitorcamillo/javaDriveless</url>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.outputTimestamp>2026-07-11T00:00:00Z</project.build.outputTimestamp>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
+        <jackson.version>2.22.3</jackson.version>
+        <jackson.annotations.version>2.22</jackson.annotations.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <junit.version>5.14.4</junit.version>
+        <mockito.version>5.23.0</mockito.version>
+        <!-- Browser, rede e detectores externos só rodam com perfil explícito. -->
+        <surefire.excludedGroups>browser,external,network</surefire.excludedGroups>
+        <surefire.groups></surefire.groups>
+    </properties>
+
+    <dependencies>
+        <!-- WebSocket Client -->
+        <dependency>
+            <groupId>org.java-websocket</groupId>
+            <artifactId>Java-WebSocket</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+
+        <!-- JSON Processing - Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.annotations.version}</version>
+        </dependency>
+
+        <!-- JSON Processing - Gson (para compatibilidade) -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.14.0</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Apache Commons Math (para substituir NumPy/SciPy) -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
+
+        <!-- Apache Commons IO -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.22.0</version>
+        </dependency>
+
+        <!-- Apache Commons Lang -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.20.0</version>
+        </dependency>
+
+        <!-- Apache Commons Codec (para Base64, etc) -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.22.0</version>
+        </dependency>
+
+        <!-- JUnit 5 para testes -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- AssertJ para assertions nos testes -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.7</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito para mocking nos testes -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- Pina toda a familia Netty acima das versoes com CVEs criticos
+         (GHSA-c4c3-7fpv-j4q5 e afins) puxadas transitivamente pelo async-http-client. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>4.1.138.Final</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <!-- Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <release>21</release>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <!-- Pin explícito evita que o Super POM altere os bytes do artefato entre ambientes. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+            </plugin>
+
+            <!-- Surefire Plugin para testes -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <!-- @{argLine} (late-binding) injeta o agente JaCoCo quando o goal
+                         prepare-agent roda; sem ele, a string fica vazia e o build normal
+                         continua funcionando. -->
+                    <argLine>${argLine} --enable-preview -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
+                    <useSystemClassLoader>false</useSystemClassLoader>
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <groups>${surefire.groups}</groups>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                </configuration>
+            </plugin>
+
+            <!-- Teste de mutação: mvn test-compile org.pitest:pitest-maven:mutationCoverage.
+                 Escopo nuclear por padrão (-DtargetClasses amplia). Prova que os asserts
+                 capturam regressões, não só que as linhas executam. -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>1.25.9</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>1.2.3</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <jvmArgs>
+                        <value>--enable-preview</value>
+                    </jvmArgs>
+                    <targetClasses>
+                        <param>io.github.selenium.javaDriverless.types.By</param>
+                        <param>io.github.selenium.javaDriverless.types.Alert</param>
+                        <param>io.github.selenium.javaDriverless.types.Select</param>
+                        <param>io.github.selenium.javaDriverless.types.ProxyManager</param>
+                        <param>io.github.selenium.javaDriverless.fpmapping.FingerprintMappingStatus</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>io.github.selenium.javaDriverless.*</param>
+                    </targetTests>
+                    <excludedTestClasses>
+                        <param>*TransportTest</param>
+                        <param>*LiveTest</param>
+                        <!-- Testes de lease cruzam JVMs próprias: dependem do formato de
+                             classpath do surefire e não do sandbox do PIT; seguem cobertos
+                             pela suíte normal. -->
+                        <param>*StorageCollisionTest</param>
+                        <param>*StorageIsolationTest</param>
+                        <param>*LifecycleTest</param>
+                        <!-- mutam env do processo (JAVA_DRIVERLESS_*): ambiente herdado no
+                             sandbox do PIT difere; seguem cobertos pela suíte surefire -->
+                        <param>io.github.selenium.javaDriverless.profiles.ProfileChromeOptionsFactoryTest</param>
+                    </excludedTestClasses>
+                    <threads>4</threads>
+                    <timestampedReports>false</timestampedReports>
+                    <outputFormats>
+                        <param>XML</param>
+                        <param>HTML</param>
+                    </outputFormats>
+                </configuration>
+            </plugin>
+
+            <!-- Cobertura permanente: toda execução de teste instrumenta o agente e gera
+                 target/site/jacoco/ (index.html + jacoco.csv). O @{argLine} do surefire
+                 resolve a injeção do agente via late-binding. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Source Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.12.0</version>
+                <configuration>
+                    <source>21</source>
+                    <additionalOptions>--enable-preview</additionalOptions>
+                    <encoding>UTF-8</encoding>
+                    <charset>UTF-8</charset>
+                    <docencoding>UTF-8</docencoding>
+                    <doclint>none</doclint>
+                    <failOnError>false</failOnError>
+                    <failOnWarnings>false</failOnWarnings>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Assembly Plugin para criar JAR com dependências -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
+
+            <!-- Resources Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.js</include>
+                    <include>**/*.json</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>browser-tests</id>
+            <properties>
+                <surefire.groups>browser</surefire.groups>
+                <surefire.excludedGroups>external,network</surefire.excludedGroups>
+            </properties>
+        </profile>
+        <profile>
+            <id>external-tests</id>
+            <properties>
+                <surefire.groups>external</surefire.groups>
+                <surefire.excludedGroups></surefire.excludedGroups>
+            </properties>
+        </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- Publicação no Central exige ativação explícita do mesmo profile da assinatura. -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <tokenAuth>true</tokenAuth>
+                            <autoPublish>true</autoPublish>
+                        </configuration>
+                    </plugin>
+                    <!-- Assinatura só faz parte do fluxo explícito de release. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

@@ -1,0 +1,812 @@
+{
+  "version": 2,
+  "purpose": "Strict DOM/value/signal contracts for the fingerprint health gate.",
+  "matchPolicies": ["equals", "equalsIfConfigured", "contains", "containsIfConfigured", "regex", "allMatchRegexIfConfigured", "ipInAllowedSet", "present", "withinTolerance", "withinToleranceIfConfigured", "withinDistance", "withinDistanceIfConfigured", "nonEmpty", "numeric", "hex32", "hex8", "canvasHash", "fontMetricsReport"],
+  "sites": {
+    "pixelscan": {
+      "allowedOrigins": ["https://pixelscan.net"],
+      "titleTerms": ["pixelscan"],
+      "requiredDom": [
+        {"id": "pixelscan-main-heading", "terms": ["fingerprint scan"]},
+        {"id": "pixelscan-verdict", "terms": ["your browser fingerprint is consistent", "your browser fingerprint is inconsistent"]},
+        {"id": "pixelscan-browser-card", "terms": ["browser"]},
+        {"id": "pixelscan-location-card", "terms": ["check geo api", "location"]},
+        {"id": "pixelscan-proxy-card", "terms": ["no proxy detected proxy", "proxy detected proxy"]},
+        {"id": "pixelscan-fingerprint-card", "terms": ["no masking detected fingerprint", "masking detected fingerprint"]},
+        {"id": "pixelscan-bot-card", "terms": ["no automated behavior detected bot check", "automated behavior detected bot check"]},
+        {"id": "pixelscan-ip-address", "terms": ["ip address"]},
+        {"id": "pixelscan-webrtc-ip-address", "terms": ["webrtc ip address"]},
+        {"id": "pixelscan-country", "terms": ["country"]},
+        {"id": "pixelscan-city", "terms": ["city"]},
+        {"id": "pixelscan-isp", "terms": ["isp"]},
+        {"id": "pixelscan-latitude", "terms": ["latitude"]},
+        {"id": "pixelscan-longitude", "terms": ["longitude"]},
+        {"id": "pixelscan-user-type-by-ip", "terms": ["user type by ip"]},
+        {"id": "pixelscan-timezone-js", "terms": ["timezone from js"]},
+        {"id": "pixelscan-time-ip", "terms": ["time from ip"]},
+        {"id": "pixelscan-screen-resolution", "terms": ["screen resolution", "resolution"]},
+        {"id": "pixelscan-font-hash", "terms": ["font hash"]},
+        {"id": "pixelscan-font-list", "terms": ["fonts"]},
+        {"id": "pixelscan-user-agent-http", "terms": ["user-agent http"]},
+        {"id": "pixelscan-user-agent-js", "terms": ["javascript mozilla/5.0"]},
+        {"id": "pixelscan-platform", "terms": ["platform"]},
+        {"id": "pixelscan-do-not-track", "terms": ["donottrack"]},
+        {"id": "pixelscan-hardware-concurrency", "terms": ["hardwareconcurency", "hardwareconcurrency"]},
+        {"id": "pixelscan-language-js", "terms": ["languages from javascript"]},
+        {"id": "pixelscan-intl-api", "terms": ["internationalization api"]},
+        {"id": "pixelscan-accept-language", "terms": ["accept-language header"]},
+        {"id": "pixelscan-webgl-vendor", "terms": ["webgl vendor"]},
+        {"id": "pixelscan-webgl-version", "terms": ["webgl version"]},
+        {"id": "pixelscan-webgl-renderer", "terms": ["webgl renderer"]},
+        {"id": "pixelscan-webgl-hash", "terms": ["webgl hash"]},
+        {"id": "pixelscan-canvas-hash", "terms": ["canvas hash"]},
+        {"id": "pixelscan-audiocontext-hash", "terms": ["audiocontext hash"]}
+      ],
+      "expectedValues": [
+        {"key": "pixelscan.verdict", "policy": "contains"},
+        {"key": "pixelscan.browserCard", "policy": "contains"},
+        {"key": "pixelscan.locationCard", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.proxyCard", "policy": "contains"},
+        {"key": "pixelscan.fingerprintCard", "policy": "contains"},
+        {"key": "pixelscan.botCard", "policy": "contains"},
+        {"key": "pixelscan.location.IP Address", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "pixelscan.location.WebRTC IP Address", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "pixelscan.location.Country", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.location.City", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.location.ISP", "policy": "present"},
+        {"key": "pixelscan.location.Latitude", "policy": "withinDistanceIfConfigured", "distance": 0.25},
+        {"key": "pixelscan.location.Longitude", "policy": "withinDistanceIfConfigured", "distance": 0.25},
+        {"key": "pixelscan.location.User Type by IP", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.dateTime.Timezone from JS", "policy": "equals"},
+        {"key": "pixelscan.dateTime.Daylight Savings Time", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.dateTime.Time from JS", "policy": "present"},
+        {"key": "pixelscan.dateTime.Time from IP", "policy": "present"},
+        {"key": "pixelscan.screen.Resolution", "policy": "equalsIfConfigured"},
+        {"key": "pixelscan.screen.Available screen size", "policy": "equalsIfConfigured"},
+        {"key": "pixelscan.fonts.Font hash", "policy": "present"},
+        {"key": "pixelscan.userAgent.HTTP", "policy": "contains"},
+        {"key": "pixelscan.userAgent.JavaScript", "policy": "contains"},
+        {"key": "pixelscan.userAgent.Platform", "policy": "equals"},
+        {"key": "pixelscan.userAgent.DoNotTrack", "policy": "equals"},
+        {"key": "pixelscan.userAgent.HardwareConcurency", "policy": "equals"},
+        {"key": "pixelscan.language.Languages from Javascript", "policy": "contains"},
+        {"key": "pixelscan.language.Internationalization API", "policy": "contains"},
+        {"key": "pixelscan.language.Accept-Language header", "policy": "contains"},
+        {"key": "pixelscan.hardware.WebGL Vendor", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.hardware.WebGL Version", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.hardware.WebGL Renderer", "policy": "containsIfConfigured"},
+        {"key": "pixelscan.hardware.WebGL Hash", "policy": "present"},
+        {"key": "pixelscan.hardware.Canvas Hash", "policy": "present"},
+        {"key": "pixelscan.hardware.AudioContext Hash", "policy": "present"}
+      ],
+      "forbiddenSignals": [
+        {"id": "pixelscan-automated-behavior", "terms": ["automated behavior detected"]},
+        {"id": "pixelscan-proxy-detected", "terms": ["proxy detected proxy"]},
+        {"id": "pixelscan-masking-detected", "terms": ["masking detected fingerprint"]},
+        {"id": "pixelscan-fingerprint-inconsistent", "terms": ["browser fingerprint is inconsistent"]},
+        {"id": "pixelscan-webrtc-leak", "terms": ["webrtc leak detected"]}
+      ]
+    },
+    "browserscan": {
+      "allowedOrigins": ["https://browserscan.org"],
+      "titleTerms": ["browserscan", "browser scan"],
+      "requiredDom": [
+        {"id": "browserscan-heading", "terms": ["browser fingerprint & trust score analyzer"]},
+        {"id": "browserscan-scan-complete", "terms": ["scan complete", "risk assessment complete"]},
+        {"id": "browserscan-score", "terms": ["status", "moderate risk", "low risk", "high risk"]},
+        {"id": "browserscan-identity", "terms": ["identity", "digital fingerprint snapshot"]},
+        {"id": "browserscan-ip", "terms": ["ip address"]},
+        {"id": "browserscan-asn", "terms": ["asn"]},
+        {"id": "browserscan-location", "terms": ["location"]},
+        {"id": "browserscan-browser", "terms": ["browser"]},
+        {"id": "browserscan-os", "terms": ["os"]},
+        {"id": "browserscan-risk-board", "terms": ["risk board"]},
+        {"id": "browserscan-protocols", "terms": ["protocol fingerprints", "tls ja3", "http version"]},
+        {"id": "browserscan-webrtc", "terms": ["webrtc", "status:"]},
+        {"id": "browserscan-dns", "terms": ["dns", "servers:"]},
+        {"id": "browserscan-consistency", "terms": ["consistency matrix", "timezone vs ip", "language vs locale"]},
+        {"id": "browserscan-hardware", "terms": ["hardware surface", "canvas hash", "webgl renderer"]},
+        {"id": "browserscan-software", "terms": ["software surface", "fonts hash", "timezone", "languages"]}
+      ],
+      "expectedValues": [
+        {"key": "browserscan.identity.IP ADDRESS", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "browserscan.identity.LOCATION", "expectedKey": "run.profileCountry", "policy": "containsIfConfigured"},
+        {"key": "browserscan.identity.BROWSER", "expectedKey": "browserMajor", "policy": "contains"},
+        {"key": "browserscan.identity.OS", "expectedKey": "uaPlatform", "policy": "contains"},
+        {"key": "browserscan.protocol.TLS VERSION", "policy": "present"},
+        {"key": "browserscan.protocol.HTTP VERSION", "policy": "present"},
+        {"key": "browserscan.webrtc.Status", "expectedKey": "browserscan.webrtc.Status", "policy": "equals"},
+        {"key": "browserscan.webrtc.IP", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "browserscan.dns.Status", "policy": "equals"},
+        {"key": "browserscan.dns.Servers", "policy": "present"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserscan-webrtc-leak", "terms": ["status: leak", "status leak", "real ip leaked via webrtc", "webrtc_leak"]},
+        {"id": "browserscan-proxy-detected", "terms": ["proxy signature detected"]},
+        {"id": "browserscan-timezone-fail", "terms": ["timezone consistency ip (", "timezone vs ip ip (", "tz_mismatch"]},
+        {"id": "browserscan-fail-row", "terms": [" fail "]}
+      ]
+    },
+    "iphey": {
+      "allowedOrigins": ["https://iphey.com"],
+      "titleTerms": ["iphey"],
+      "requiredDom": [
+        {"id": "iphey-verdict", "terms": ["your digital identity looks"], "selectors": ["#hero-status", "h1", "[role=status]"]},
+        {"id": "iphey-browser-section", "terms": ["browser"], "selectors": ["#browser"]},
+        {"id": "iphey-browser-timezone", "terms": ["timezone"], "selectors": ["#browser + .detail-list .detail-entry"]},
+        {"id": "iphey-hardware-section", "terms": ["hardware"], "selectors": ["#hardware"]},
+        {"id": "iphey-hardware-gpu", "terms": ["gpu"], "selectors": ["#hardware + .detail-list .detail-entry"]},
+        {"id": "iphey-location-section", "terms": ["location"], "selectors": ["#location"]},
+        {"id": "iphey-location-ip", "terms": ["ip"], "selectors": ["#location + .detail-list .detail-entry"]},
+        {"id": "iphey-location-geolocation", "terms": ["geolocation"], "selectors": ["#location + .detail-list .detail-entry"]},
+        {"id": "iphey-network-section", "terms": ["network"], "selectors": ["#network"]},
+        {"id": "iphey-network-webrtc", "terms": ["webrtc ip"], "selectors": ["#network + .detail-list .detail-entry"]},
+        {"id": "iphey-bot-section", "terms": ["bot"], "selectors": ["#bot"]},
+        {"id": "iphey-bot-webdriver", "terms": ["haswebdriver"], "selectors": ["#bot + .detail-list .detail-entry"]},
+        {"id": "iphey-bot-user-agent", "terms": ["hasuseragent"], "selectors": ["#bot + .detail-list .detail-entry"]},
+        {"id": "iphey-bot-navigator", "terms": ["hasnavigator"], "selectors": ["#bot + .detail-list .detail-entry"]}
+      ],
+      "expectedValues": [
+        {"key": "iphey.verdict", "policy": "equals"},
+        {"key": "iphey.browser.Timezone", "expectedKey": "run.timezone", "policy": "equals"},
+        {"key": "iphey.hardware.Resolution", "expectedKey": "screen.resolution", "policy": "equalsIfConfigured"},
+        {"key": "iphey.hardware.GPU", "expectedKey": "webgl.unmaskedRenderer", "policy": "equalsIfConfigured"},
+        {"key": "iphey.location.IP", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "iphey.location.Timezone", "expectedKey": "run.timezone", "policy": "equals"},
+        {"key": "iphey.location.Latitude", "expectedKey": "geolocation.latitude", "policy": "withinToleranceIfConfigured", "tolerance": 0.5},
+        {"key": "iphey.location.Longitude", "expectedKey": "geolocation.longitude", "policy": "withinToleranceIfConfigured", "tolerance": 0.5},
+        {"key": "iphey.network.User Agent", "expectedKey": "userAgent", "policy": "equals"},
+        {"key": "iphey.network.OS", "expectedKey": "uaPlatform", "policy": "contains"},
+        {"key": "iphey.network.WebRTC IP", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "iphey.bot.hasCDP", "expectedKey": "iphey.bot.booleanPattern", "policy": "regex"},
+        {"key": "iphey.bot.hasWebdriver", "policy": "equals"},
+        {"key": "iphey.bot.hasUserAgent", "expectedKey": "iphey.bot.booleanPattern", "policy": "regex"},
+        {"key": "iphey.bot.hasNavigator", "expectedKey": "iphey.bot.booleanPattern", "policy": "regex"}
+      ],
+      "forbiddenSignals": [
+        {"id": "iphey-unreliable", "terms": ["your digital identity looks unreliable"]},
+        {"id": "iphey-dolphin-anty-process", "terms": ["detected the following processes on your device: dolphin anty"]},
+        {"id": "iphey-more-login", "terms": ["detected anti-detect browser environment (more-login)"]},
+        {"id": "iphey-webdriver-detected", "terms": ["haswebdriver true"]}
+      ]
+    },
+    "printleaks": {
+      "allowedOrigins": ["https://www.printleaks.com", "https://printleaks.com"],
+      "titleTerms": ["printleaks", "browser fingerprint"],
+      "requiredDom": [
+        {"id": "printleaks-heading", "terms": ["printleaks", "browser fingerprint analysis tool"]},
+        {"id": "printleaks-collection", "terms": ["collect fingerprints", "collection complete"]},
+        {"id": "printleaks-total", "terms": ["total collectors"]},
+        {"id": "printleaks-succeeded", "terms": ["succeeded"]},
+        {"id": "printleaks-errors", "terms": ["errors"]},
+        {"id": "printleaks-system", "terms": ["system"]},
+        {"id": "printleaks-font", "terms": ["font"], "selectors": ["#item-system-font .fp-item__name"]},
+        {"id": "printleaks-colors", "terms": ["colors", "canvastext"]},
+        {"id": "printleaks-audio", "terms": ["audio", "audioinput", "audiooutput"]},
+        {"id": "printleaks-canvas", "terms": ["canvas"]},
+        {"id": "printleaks-webgl", "terms": ["webgl"]},
+        {"id": "printleaks-webrtc", "terms": ["webrtc"], "selectors": ["#item-browser-webRTC .fp-item__name"]},
+        {"id": "printleaks-navigator", "terms": ["navigator"]},
+        {"id": "printleaks-permissions", "terms": ["permissions"]},
+        {"id": "printleaks-storage", "terms": ["storage"]},
+        {"id": "printleaks-cpu-gpu", "terms": ["gpu", "hardware concurrency", "device memory"]}
+      ],
+      "expectedValues": [
+        {"key": "printleaks.collectors.total", "policy": "present"},
+        {"key": "printleaks.collectors.succeeded", "policy": "present"},
+        {"key": "printleaks.collectors.errors", "policy": "present"}
+      ],
+      "forbiddenSignals": []
+    },
+    "creepjs": {
+      "allowedOrigins": ["https://abrahamjuliot.github.io"],
+      "titleTerms": ["creepjs"],
+      "requiredDom": [
+        {"id": "creepjs-fp-id", "terms": ["fp id:"], "selectors": [".fingerprint-header .ellipsis-all"]},
+        {"id": "creepjs-fuzzy", "terms": ["fuzzy:"]},
+        {"id": "creepjs-webrtc", "terms": ["webrtc", "candidate:"]},
+        {"id": "creepjs-timezone", "terms": ["timezone"]},
+        {"id": "creepjs-intl", "terms": ["intl"]},
+        {"id": "creepjs-headless", "terms": ["headless", "stealth"]},
+        {"id": "creepjs-worker", "terms": ["worker"]},
+        {"id": "creepjs-webgl", "terms": ["webgl"]},
+        {"id": "creepjs-screen", "terms": ["screen"]},
+        {"id": "creepjs-canvas2d", "terms": ["canvas 2d"]},
+        {"id": "creepjs-fonts", "terms": ["fonts"]},
+        {"id": "creepjs-audio", "terms": ["audio"]},
+        {"id": "creepjs-speech", "terms": ["speech"]},
+        {"id": "creepjs-css-media", "terms": ["css media", "system styles"]},
+        {"id": "creepjs-navigator", "terms": ["navigator", "permissions"]},
+        {"id": "creepjs-storage", "terms": ["storage"], "selectors": [".block-text-large[title*='StorageManager.estimate']"]}
+      ],
+      "expectedValues": [
+        {"key": "creepjs.fpId", "policy": "present"},
+        {"key": "creepjs.headless.likeHeadlessPercent", "policy": "present"},
+        {"key": "creepjs.headless.headlessPercent", "policy": "present"},
+        {"key": "creepjs.headless.stealthPercent", "policy": "present"},
+        {"key": "creepjs.canvas.hash", "policy": "present"},
+        {"key": "creepjs.canvas.dataHash", "policy": "present"},
+        {"key": "creepjs.canvas.rendering", "expectedKey": "creepjs.canvas.renderingPattern", "policy": "regex"},
+        {"key": "creepjs.canvas.textMetrics", "policy": "present"},
+        {"key": "creepjs.canvas.textHash", "policy": "present"},
+        {"key": "creepjs.canvas.emojiHash", "policy": "present"},
+        {"key": "creepjs.canvas.paintGpuHash", "policy": "present"},
+        {"key": "creepjs.canvas.paintCpuHash", "policy": "present"},
+        {"key": "creepjs.canvas.combinedHash", "policy": "present"},
+        {"key": "creepjs.webgl.hash", "policy": "present"},
+        {"key": "creepjs.webgl.imagesHash", "policy": "present"},
+        {"key": "creepjs.webgl.pixelsHash", "policy": "present"},
+        {"key": "creepjs.webgl.paramsCount", "policy": "present"},
+        {"key": "creepjs.webgl.paramsHash", "policy": "present"},
+        {"key": "creepjs.webgl.extensionsCount", "policy": "present"},
+        {"key": "creepjs.webgl.extensionsHash", "policy": "present"},
+        {"key": "creepjs.webgl.gpuVendor", "policy": "equalsIfConfigured"},
+        {"key": "creepjs.webgl.gpuRenderer", "policy": "equalsIfConfigured"},
+        {"key": "creepjs.worker.gpuVendor", "policy": "equalsIfConfigured"},
+        {"key": "creepjs.worker.gpuRenderer", "policy": "equalsIfConfigured"}
+      ],
+      "forbiddenSignals": []
+    },
+    "browserleaks-ip": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-ip-heading", "terms": ["what is my ip address", "my ip address"]},
+        {"id": "browserleaks-ip-address", "terms": ["ip address"]},
+        {"id": "browserleaks-ip-hostname", "terms": ["hostname"]},
+        {"id": "browserleaks-ip-location", "terms": ["ip address location", "country", "city"]},
+        {"id": "browserleaks-ip-isp", "terms": ["isp", "organization", "network"]},
+        {"id": "browserleaks-ip-timezone", "terms": ["timezone", "local time"]},
+        {"id": "browserleaks-ip-ipv6", "terms": ["ipv6 leak test", "ipv6 address"]},
+        {"id": "browserleaks-ip-webrtc", "terms": ["webrtc leak test", "local ip address", "public ip address"]},
+        {"id": "browserleaks-ip-dns", "terms": ["dns leak test", "run dns leak test"]},
+        {"id": "browserleaks-ip-tcp", "terms": ["tcp/ip fingerprint", "ja4t"]},
+        {"id": "browserleaks-ip-tls", "terms": ["tls fingerprint", "ja3 hash"]},
+        {"id": "browserleaks-ip-headers", "terms": ["http headers", "user-agent", "accept-language"]}
+      ],
+      "expectedValues": [
+        {"key": "browserleaks-ip.ipAddress", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "browserleaks-ip.location.Timezone", "expectedKey": "run.timezone", "policy": "contains"},
+        {"key": "browserleaks-ip.tcp.os", "expectedKey": "run.transportOs", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-ip.headers.platform", "expectedKey": "uaPlatform", "policy": "equals"},
+        {"key": "browserleaks-ip.headers.acceptLanguage", "expectedKey": "http.acceptLanguage", "policy": "equals"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-ip-local-ip-exposed", "terms": ["local ip address 192.168.", "local ip address 10.", "local ip address 172.16."]},
+        {"id": "browserleaks-ip-tor", "terms": ["this ip is identified to be a tor relay"]}
+      ]
+    },
+    "browserleaks-dns": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-dns-heading", "terms": ["dns leak test"]},
+        {"id": "browserleaks-dns-current-ip", "terms": ["your ip address", "ip address"]},
+        {"id": "browserleaks-dns-isp", "terms": ["isp"]},
+        {"id": "browserleaks-dns-location", "terms": ["location"]},
+        {"id": "browserleaks-dns-results", "terms": ["test results", "found", "servers"]},
+        {"id": "browserleaks-dns-servers", "terms": ["your dns servers", "ip address :", "isp :", "location :"]}
+      ],
+      "expectedValues": [
+        {"key": "browserleaks-dns.currentIp", "expectedKey": "webRtc.publicIp", "policy": "equals"},
+        {"key": "browserleaks-dns.isp", "policy": "present"},
+        {"key": "browserleaks-dns.location", "policy": "present"},
+        {"key": "browserleaks-dns.testResults", "expectedKey": "browserleaks-dns.testResultsPattern", "policy": "regex"},
+        {"key": "browserleaks-dns.reportedServerCount", "expectedKey": "browserleaks-dns.positiveCountPattern", "policy": "regex"},
+        {"key": "browserleaks-dns.observedServerCount", "expectedKey": "browserleaks-dns.positiveCountPattern", "policy": "regex"},
+        {"key": "browserleaks-dns.countConsistency", "expectedKey": "browserleaks-dns.countConsistency", "policy": "equals"},
+        {"key": "browserleaks-dns.serverIps", "expectedKey": "browserleaks-dns.allowedIpPattern", "policy": "allMatchRegexIfConfigured"},
+        {"key": "browserleaks-dns.serverIsps", "expectedKey": "browserleaks-dns.allowedIspPattern", "policy": "allMatchRegexIfConfigured"},
+        {"key": "browserleaks-dns.serverLocations", "expectedKey": "browserleaks-dns.allowedLocationPattern", "policy": "allMatchRegexIfConfigured"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-dns-no-results", "terms": ["run dns leak test"]}
+      ]
+    },
+    "browserleaks-webrtc": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-webrtc-heading", "terms": ["webrtc leak test"]},
+        {"id": "browserleaks-webrtc-remote-ip", "terms": ["your remote ip"]},
+        {"id": "browserleaks-webrtc-support", "terms": ["webrtc support detection", "rtcpeerconnection", "rtcdatachannel"]},
+        {"id": "browserleaks-webrtc-status", "terms": ["your webrtc ip", "no leak"]},
+        {"id": "browserleaks-webrtc-local", "terms": ["local ip address"]},
+        {"id": "browserleaks-webrtc-public", "terms": ["public ip address"]},
+        {"id": "browserleaks-webrtc-sdp", "terms": ["session description", "sdp log"]},
+        {"id": "browserleaks-webrtc-media", "terms": ["media devices", "audio permissions", "video permissions"]}
+      ],
+      "expectedValues": [
+        {"key": "browserleaks-webrtc.status", "policy": "present"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-webrtc-leak", "terms": ["webrtc leak test leak", "local ip address 192.168.", "local ip address 10.", "local ip address 172.16."]}
+      ]
+    },
+    "ipleak": {
+      "allowedOrigins": ["https://ipleak.net"],
+      "titleTerms": ["ipleak", "ip/dns detect"],
+      "requiredDom": [
+        {"id": "ipleak-ip-addresses", "terms": ["your ip addresses"], "selectors": [".box > .title"]},
+        {"id": "ipleak-forwarded", "terms": ["forwarded ip"]},
+        {"id": "ipleak-browser-default", "terms": ["browser default"], "selectors": ["[data-tooltip='Internet Protocol used by your browser']"]},
+        {"id": "ipleak-webrtc", "terms": ["your ip addresses - webrtc detection"], "selectors": [".box:has(#rtc_placeholder) > .title"]},
+        {"id": "ipleak-dns", "terms": ["dns detection", "dns addresses"], "selectors": ["#dnsdetection_title"], "matchPolicy": "nonEmpty"},
+        {"id": "ipleak-ip-details", "terms": ["ip address details", "isp:", "country:", "city:"]},
+        {"id": "ipleak-user-agent", "terms": ["your user agent"]},
+        {"id": "ipleak-language", "terms": ["what language you can accept"]},
+        {"id": "ipleak-system", "terms": ["system information", "platform:"]},
+        {"id": "ipleak-screen", "terms": ["screen information", "your screen:"]},
+        {"id": "ipleak-headers", "terms": ["http request headers"], "selectors": [".box:has(> table.properties.details) > .title", ".box > .title"]}
+      ],
+      "forbiddenSignals": [
+        {"id": "ipleak-forwarded-ip", "terms": ["forwarded ip detected"]}
+      ]
+    },
+    "trustmyip-proxy": {
+      "allowedOrigins": ["https://trustmyip.com", "https://www.trustmyip.com"],
+      "titleTerms": ["trustmyip", "proxy checker"],
+      "requiredDom": [
+        {"id": "trustmyip-proxy-heading", "terms": ["proxy checker", "proxy scanner active"], "selectors": ["h1"]},
+        {"id": "trustmyip-proxy-connection", "terms": ["my connection"], "selectors": ["div.mb-8:has(+ #panel-my) > span", "div:has(+ #panel-my) span"]},
+        {"id": "trustmyip-proxy-summary", "terms": ["your connection details"], "selectors": ["#panel-my h3"]},
+        {"id": "trustmyip-proxy-ip", "terms": ["your ip address"], "selectors": [".hd-row:has(#v-ip)"]},
+        {"id": "trustmyip-proxy-type", "terms": ["connection type"], "selectors": [".hd-row:has(#v-type)"]},
+        {"id": "trustmyip-proxy-webrtc", "terms": ["webrtc real ip", "webrtc"], "selectors": [".hd-row:has(#v-webrtc)"]},
+        {"id": "trustmyip-proxy-match", "terms": ["ip match", "no public ip found", "mismatch"], "selectors": [".hd-row:has(#v-match)", ".hd-row:has(#v-webrtc)"]},
+        {"id": "trustmyip-proxy-headers", "terms": ["proxy header scan", "real proxy headers"], "selectors": ["button[onclick='toggleHeaders()'] h3"]},
+        {"id": "trustmyip-proxy-forwarded", "terms": ["forwarded ip addresses found", "x-forwarded-for"], "selectors": ["#headers-list .hd-row"]},
+        {"id": "trustmyip-proxy-protocol", "terms": ["protocol"], "selectors": ["div:has(> #stat-proto)"]}
+      ],
+      "expectedValues": [
+        {"key": "trustmyip-proxy.result", "policy": "present"}
+      ],
+      "forbiddenSignals": [
+        {"id": "trustmyip-proxy-webrtc-leak", "terms": ["leak! webrtc"]}
+      ]
+    },
+    "trustmyip-timezone": {
+      "allowedOrigins": ["https://trustmyip.com", "https://www.trustmyip.com"],
+      "titleTerms": ["trustmyip", "timezone"],
+      "requiredDom": [
+        {"id": "trustmyip-timezone-heading", "terms": ["temporal forensic scanner active", "timezone dissonance test", "free ip vs browser timezone check"]},
+        {"id": "trustmyip-timezone-runner", "terms": ["ip vs browser timezone check", "run timezone dissonance test"]},
+        {"id": "trustmyip-timezone-result-cards", "terms": ["ip timezone", "browser timezone", "utc offset diff", "dissonance result"]},
+        {"id": "trustmyip-timezone-audit-log", "terms": ["temporal forensic audit log", "intl.datetimeformat", "gettimezoneoffset", "date().tostring", "dst"]},
+        {"id": "trustmyip-timezone-summary", "terms": ["summary", "your ip address", "browser timezone"]}
+      ],
+      "expectedValues": [
+        {"key": "trustmyip-timezone.ipTimezone", "expectedKey": "run.timezone", "policy": "contains"},
+        {"key": "trustmyip-timezone.browserTimezone", "expectedKey": "run.timezone", "policy": "contains"},
+        {"key": "trustmyip-timezone.offsetDiff", "expectedKey": "trustmyip-timezone.offsetPattern", "policy": "regex"},
+        {"key": "trustmyip-timezone.result", "expectedKey": "trustmyip-timezone.resultPattern", "policy": "regex"}
+      ],
+      "forbiddenSignals": [
+        {"id": "trustmyip-timezone-high-traffic", "terms": ["server experiencing high traffic"]},
+        {"id": "trustmyip-timezone-alert", "terms": ["[alert] critical timezone dissonance"]},
+        {"id": "trustmyip-timezone-warning", "terms": ["[warning] minor timezone dissonance"]}
+      ]
+    },
+    "browserleaks-javascript": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-js-heading", "terms": ["javascript browser information"]},
+        {"id": "browserleaks-js-detection", "terms": ["javascript detection", "javascript enabled"]},
+        {"id": "browserleaks-js-screen", "terms": ["screen object", "screen resolution"]},
+        {"id": "browserleaks-js-timezone", "terms": ["datetimeformat", "timezone"]},
+        {"id": "browserleaks-js-navigator", "terms": ["navigator object"]},
+        {"id": "browserleaks-js-user-agent", "terms": ["useragent"]},
+        {"id": "browserleaks-js-platform", "terms": ["platform"]},
+        {"id": "browserleaks-js-hardware", "terms": ["hardwareconcurrency", "devicememory"]},
+        {"id": "browserleaks-js-languages", "terms": ["language", "languages"]},
+        {"id": "browserleaks-js-webdriver", "terms": ["webdriver"]},
+        {"id": "browserleaks-js-client-hints", "terms": ["navigator.useragentdata", "client hints"]},
+        {"id": "browserleaks-js-plugins", "terms": ["navigator.plugins", "plugins"]},
+        {"id": "browserleaks-js-mimetypes", "terms": ["mimetypes"]}
+      ],
+      "expectedValues": [
+        {"key": "browserleaks-javascript.screen.resolution", "expectedKey": "screen.resolution", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-javascript.intl.locale", "expectedKey": "locale", "policy": "equals"},
+        {"key": "browserleaks-javascript.intl.timeZone", "expectedKey": "run.timezone", "policy": "equals"},
+        {"key": "browserleaks-javascript.navigator.userAgent", "expectedKey": "userAgent", "policy": "equals"},
+        {"key": "browserleaks-javascript.navigator.platform", "expectedKey": "platform", "policy": "equals"},
+        {"key": "browserleaks-javascript.navigator.hardwareConcurrency", "expectedKey": "hardwareConcurrency", "policy": "equals"},
+        {"key": "browserleaks-javascript.navigator.deviceMemory", "expectedKey": "deviceMemory", "policy": "equals"},
+        {"key": "browserleaks-javascript.navigator.language", "expectedKey": "locale", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.brands", "expectedKey": "clientHints.brands", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-javascript.clientHints.mobile", "expectedKey": "mobile", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.platform", "expectedKey": "uaPlatform", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.platformVersion", "expectedKey": "platformVersion", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-javascript.clientHints.architecture", "expectedKey": "architecture", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.bitness", "expectedKey": "bitness", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.wow64", "expectedKey": "wow64", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.model", "expectedKey": "model", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.uaFullVersion", "expectedKey": "browserVersion", "policy": "equals"},
+        {"key": "browserleaks-javascript.clientHints.fullVersionList", "expectedKey": "clientHints.fullVersionList", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-javascript.clientHints.formFactors", "expectedKey": "clientHints.formFactors", "policy": "equals"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-js-webdriver-true", "terms": ["webdriver true"]}
+      ]
+    },
+    "browserleaks-client-hints": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-ch-heading", "terms": ["client hints"]},
+        {"id": "browserleaks-ch-user-agent", "terms": ["http user-agent"]},
+        {"id": "browserleaks-ch-api", "terms": ["client hints javascript api", "api support"]},
+        {"id": "browserleaks-ch-brands", "terms": ["brands"]},
+        {"id": "browserleaks-ch-mobile", "terms": ["mobile"]},
+        {"id": "browserleaks-ch-platform", "terms": ["platform"]},
+        {"id": "browserleaks-ch-platform-version", "terms": ["platformversion"]},
+        {"id": "browserleaks-ch-architecture", "terms": ["architecture"]},
+        {"id": "browserleaks-ch-bitness", "terms": ["bitness"]},
+        {"id": "browserleaks-ch-model", "terms": ["model"]},
+        {"id": "browserleaks-ch-full-version", "terms": ["uafullversion", "fullversionlist"]},
+        {"id": "browserleaks-ch-http-headers", "terms": ["client hints http headers", "sec-ch-ua", "sec-ch-ua-platform"]}
+      ],
+      "expectedValues": [
+        {"key": "browserleaks-client-hints.httpUserAgent", "expectedKey": "userAgent", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.brands", "expectedKey": "clientHints.brands", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.javascript.mobile", "expectedKey": "mobile", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.platform", "expectedKey": "uaPlatform", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.platformVersion", "expectedKey": "platformVersion", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.javascript.architecture", "expectedKey": "architecture", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.bitness", "expectedKey": "bitness", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.wow64", "expectedKey": "wow64", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.model", "expectedKey": "model", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.uaFullVersion", "expectedKey": "browserVersion", "policy": "equals"},
+        {"key": "browserleaks-client-hints.javascript.fullVersionList", "expectedKey": "clientHints.fullVersionList", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.javascript.formFactors", "expectedKey": "clientHints.formFactors", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA", "expectedKey": "clientHints.uaHeader", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Platform", "expectedKey": "uaPlatform", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Mobile", "expectedKey": "mobile", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Full-Version", "expectedKey": "browserVersion", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Full-Version-List", "expectedKey": "clientHints.fullVersionListHeader", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Platform-Version", "expectedKey": "platformVersion", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Arch", "expectedKey": "architecture", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Bitness", "expectedKey": "bitness", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-WoW64", "expectedKey": "wow64", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Model", "expectedKey": "model", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-UA-Form-Factors", "expectedKey": "clientHints.formFactorsHeader", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Lang", "expectedKey": "clientHints.notReceived", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Save-Data", "expectedKey": "clientHints.notReceived", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Width", "expectedKey": "clientHints.notReceived", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Device-Memory", "expectedKey": "deviceMemory", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Device-Memory", "expectedKey": "deviceMemory", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Viewport-Width", "expectedKey": "viewport.width", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.Viewport-Width", "expectedKey": "viewport.width", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Viewport-Height", "expectedKey": "viewport.height", "policy": "present"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-DPR", "expectedKey": "deviceScaleFactor", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.DPR", "expectedKey": "deviceScaleFactor", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.RTT", "expectedKey": "connection.rtt", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.Downlink", "expectedKey": "connection.downlink", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.ECT", "expectedKey": "connection.effectiveType", "policy": "equalsIfConfigured"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Prefers-Color-Scheme", "expectedKey": "colorScheme", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Prefers-Reduced-Motion", "expectedKey": "prefersReducedMotion", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Prefers-Reduced-Transparency", "expectedKey": "prefersReducedTransparency", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Prefers-Contrast", "expectedKey": "clientHints.notReceived", "policy": "equals"},
+        {"key": "browserleaks-client-hints.headers.Sec-CH-Forced-Colors", "expectedKey": "clientHints.notReceived", "policy": "equals"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-ch-api-disabled", "terms": ["api support false"]}
+      ]
+    },
+    "whatsmybrowser": {
+      "allowedOrigins": ["https://www.whatsmybrowser.org", "https://whatsmybrowser.org"],
+      "titleTerms": ["what's my browser", "what’s my browser", "what browser", "whatsmybrowser"],
+      "requiredDom": [
+        {"id": "whatsmybrowser-heading", "terms": ["what's my browser", "what browser am i using"]},
+        {"id": "whatsmybrowser-detected", "terms": ["you’re using chrome", "you're using chrome"]},
+        {"id": "whatsmybrowser-details", "terms": ["browser details"], "selectors": [".browser-details > .wrap > h2.header"]},
+        {"id": "whatsmybrowser-os", "terms": ["operating system"], "selectors": [".browser-details-table .row:has(> .os.name)"]},
+        {"id": "whatsmybrowser-ip", "terms": ["ip address"], "selectors": [".browser-details-table .row:has(> .ip.name)"]},
+        {"id": "whatsmybrowser-js", "terms": ["javascript enabled"], "selectors": [".browser-details-table .javascript_enabled"]},
+        {"id": "whatsmybrowser-cookies", "terms": ["cookies enabled"], "selectors": [".browser-details-table .cookies_enabled"]},
+        {"id": "whatsmybrowser-websockets", "terms": ["websockets supported"], "selectors": [".browser-details-table .websockets_supported"]},
+        {"id": "whatsmybrowser-webgl", "terms": ["webgl supported"], "selectors": [".browser-details-table .webgl_supported"]},
+        {"id": "whatsmybrowser-language", "terms": ["language"], "selectors": [".browser-details-table .language"]},
+        {"id": "whatsmybrowser-browser-size", "terms": ["browser size"], "selectors": [".browser-details-table .browser_size"]},
+        {"id": "whatsmybrowser-screen-size", "terms": ["screen size"], "selectors": [".browser-details-table .screen_size"]},
+        {"id": "whatsmybrowser-ua", "terms": ["your full user agent string is"], "selectors": [".browser-details .user-agent-cont"]}
+      ],
+      "expectedValues": [
+        {"key": "whatsmybrowser.browserMajor", "expectedKey": "browserMajor", "policy": "equals"},
+        {"key": "whatsmybrowser.details.operatingSystem", "expectedKey": "uaPlatform", "policy": "contains"},
+        {"key": "whatsmybrowser.details.ipAddress", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "whatsmybrowser.details.language", "expectedKey": "locale", "policy": "equals"},
+        {"key": "whatsmybrowser.details.screenSize", "expectedKey": "screen.resolution", "policy": "equalsIfConfigured"},
+        {"key": "whatsmybrowser.details.userAgent", "expectedKey": "userAgent", "policy": "equals"}
+      ],
+      "forbiddenSignals": [
+        {"id": "whatsmybrowser-wrong-browser", "terms": ["you’re using firefox", "you're using firefox", "you’re using safari", "you're using safari"]},
+        {"id": "whatsmybrowser-javascript-disabled", "terms": ["javascript enabled no"]},
+        {"id": "whatsmybrowser-cookies-disabled", "terms": ["cookies enabled no"]},
+        {"id": "whatsmybrowser-websockets-disabled", "terms": ["websockets supported no"]},
+        {"id": "whatsmybrowser-webgl-disabled", "terms": ["webgl supported no"]}
+      ]
+    },
+    "sannysoft": {
+      "allowedOrigins": ["https://bot.sannysoft.com"],
+      "titleTerms": ["antibot", "sannysoft", "webdriver"],
+      "requiredDom": [
+        {"id": "sannysoft-intoli", "terms": ["intoli.com tests + additions"]},
+        {"id": "sannysoft-user-agent", "terms": ["user agent"]},
+        {"id": "sannysoft-webdriver", "terms": ["webdriver", "webdriver advanced"], "selectors": ["tr:has(#webdriver-result)", "tr:has(#advanced-webdriver-result)"]},
+        {"id": "sannysoft-chrome", "terms": ["chrome", "present (passed)"]},
+        {"id": "sannysoft-permissions", "terms": ["permissions"]},
+        {"id": "sannysoft-plugins", "terms": ["plugins length", "pluginarray"]},
+        {"id": "sannysoft-languages", "terms": ["languages"]},
+        {"id": "sannysoft-webgl", "terms": ["webgl vendor", "webgl renderer"]},
+        {"id": "sannysoft-hairline", "terms": ["broken image dimensions"]},
+        {"id": "sannysoft-fingerprint-scanner", "terms": ["fingerprint scanner tests"]},
+        {"id": "sannysoft-headchr", "terms": ["headchr_chrome_obj", "headchr_permissions", "headchr_plugins"]},
+        {"id": "sannysoft-selenium", "terms": ["selenium_driver"]}
+      ],
+      "expectedValues": [
+        {"key": "sannysoft.webdriver", "policy": "present"}
+      ],
+      "forbiddenSignals": [
+        {"id": "sannysoft-webdriver-present-failed", "terms": ["present (failed)"]},
+        {"id": "sannysoft-selenium-true", "terms": ["selenium_driver failed"]},
+        {"id": "sannysoft-headless", "terms": ["headless"]}
+      ]
+    },
+    "browserleaks-canvas": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-canvas-heading", "terms": ["canvas fingerprinting", "canvas fingerprint"]},
+        {"id": "browserleaks-canvas-support", "terms": ["canvas support detection", "canvas 2d api"]},
+        {"id": "browserleaks-canvas-text-api", "terms": ["text api for canvas"]},
+        {"id": "browserleaks-canvas-dataurl", "terms": ["canvas todataurl"]},
+        {"id": "browserleaks-canvas-fingerprint", "terms": [], "selectors": ["#canvas-hash"], "matchPolicy": "hex32"}
+      ],
+      "expectedValues": [
+        {"key": "browserleaks-canvas.fingerprint", "policy": "present"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-canvas-disabled", "terms": ["canvas 2d api false", "canvas todataurl false"]}
+      ]
+    },
+    "browserleaks-webgl": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-webgl-heading", "terms": ["webgl browser report"]},
+        {"id": "browserleaks-webgl-support", "terms": ["this browser supports webgl", "this browser supports webgl 2"]},
+        {"id": "browserleaks-webgl-fingerprint", "terms": ["webgl fingerprint", "webgl report hash", "webgl image hash"]},
+        {"id": "browserleaks-webgl-context", "terms": ["webgl context info", "supported context name"]},
+        {"id": "browserleaks-webgl-version", "terms": ["gl version", "shading language version"]},
+        {"id": "browserleaks-webgl-vendor", "terms": ["vendor", "renderer"]},
+        {"id": "browserleaks-webgl-debug", "terms": ["debug renderer info", "unmasked vendor", "unmasked renderer"]},
+        {"id": "browserleaks-webgl-limits", "terms": ["max texture size", "max texture image units"]},
+        {"id": "browserleaks-webgl-extensions", "terms": ["supported webgl extensions"]}
+      ],
+      "expectedValues": [
+        {"key": "browserleaks-webgl.renderer", "policy": "equalsIfConfigured"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-webgl-disabled", "terms": ["this browser does not support webgl", "webgl disabled"]}
+      ]
+    },
+    "webgl-report": {
+      "allowedOrigins": ["https://webglreport.com", "https://www.webglreport.com"],
+      "titleTerms": ["webgl report"],
+      "requiredDom": [
+        {"id": "webgl-report-heading", "terms": ["webgl report"]},
+        {"id": "webgl-report-webgl1", "terms": ["webgl 1"], "selectors": [".webglVersionTabs a.active"]},
+        {"id": "webgl-report-context", "terms": ["context name:", "gl version:", "shading language version:"]},
+        {"id": "webgl-report-vendor", "terms": ["vendor:", "renderer:"]},
+        {"id": "webgl-report-unmasked", "terms": ["unmasked vendor:", "unmasked renderer:"]},
+        {"id": "webgl-report-limits", "terms": ["max vertex texture image units:", "max texture size:"]},
+        {"id": "webgl-report-precision", "terms": ["best float precision:", "float/int precision:"]},
+        {"id": "webgl-report-extensions", "terms": ["supported extensions:"]}
+      ],
+      "expectedValues": [
+        {"key": "webgl-report.vendor", "policy": "equalsIfConfigured"},
+        {"key": "webgl-report.renderer", "policy": "equalsIfConfigured"}
+      ],
+      "forbiddenSignals": [
+        {"id": "webgl-report-disabled", "terms": ["this browser does not support webgl"]}
+      ]
+    },
+    "browserleaks-fonts": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-fonts-heading", "terms": ["font fingerprinting"]},
+        {"id": "browserleaks-fonts-metrics-explanation", "terms": ["font metrics measurement"], "selectors": ["#content > p"]},
+        {"id": "browserleaks-fonts-glyphs-explanation", "terms": ["unicode glyphs measurement"], "selectors": ["#content > p"]},
+        {"id": "browserleaks-fonts-metrics", "terms": ["font metrics"]},
+        {"id": "browserleaks-fonts-report", "terms": [], "selectors": ["#fonts-metrics-report"], "matchPolicy": "fontMetricsReport"},
+        {"id": "browserleaks-fonts-metrics-hash", "terms": [], "selectors": ["#fonts-metrics-hash"], "matchPolicy": "hex32"},
+        {"id": "browserleaks-fonts-glyphs-hash", "terms": [], "selectors": ["#fonts-glyphs-hash"], "matchPolicy": "hex8"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-fonts-empty", "terms": ["0 fonts and 0 unique metrics found"]}
+      ]
+    },
+    "browserleaks-geo": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-geo-heading", "terms": ["geolocation api"]},
+        {"id": "browserleaks-geo-permissions", "terms": ["permissions api", "origin permissions", "global permissions"]},
+        {"id": "browserleaks-geo-support", "terms": ["your browser supports geolocation api"]},
+        {"id": "browserleaks-geo-data", "terms": ["geolocation data"]},
+        {"id": "browserleaks-geo-latitude", "terms": ["latitude"], "selectors": ["#latitude"], "matchPolicy": "numeric"},
+        {"id": "browserleaks-geo-longitude", "terms": ["longitude"], "selectors": ["#longitude"], "matchPolicy": "numeric"},
+        {"id": "browserleaks-geo-accuracy", "terms": ["accuracy"], "selectors": ["#accuracy"], "matchPolicy": "numeric"},
+        {"id": "browserleaks-geo-reverse", "terms": ["reverse geocoding"]}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-geo-denied", "terms": ["permission denied", "user denied geolocation"]}
+      ]
+    },
+    "browserleaks-tls": {
+      "allowedOrigins": ["https://browserleaks.com"],
+      "titleTerms": ["browserleaks"],
+      "requiredDom": [
+        {"id": "browserleaks-tls-heading", "terms": ["tls client test"]},
+        {"id": "browserleaks-tls-user-agent", "terms": ["http user-agent"]},
+        {"id": "browserleaks-tls-protocol-support", "terms": ["protocol support", "tls 1.3", "tls 1.2"]},
+        {"id": "browserleaks-tls-fingerprint", "terms": ["tls fingerprint", "ja4", "ja3"]},
+        {"id": "browserleaks-tls-handshake", "terms": ["tls handshake", "tls protocol", "cipher suite"]},
+        {"id": "browserleaks-tls-ciphers", "terms": ["supported cipher suites", "cipher suites"]},
+        {"id": "browserleaks-tls-extensions", "terms": ["supported tls extensions", "tls extensions"]},
+        {"id": "browserleaks-tls-alpn", "terms": ["application_layer_protocol_negotiation", "h2", "http/1.1"]}
+      ],
+      "forbiddenSignals": [
+        {"id": "browserleaks-tls-no-tls13", "terms": ["tls 1.3 not supported"]}
+      ]
+    },
+    "trustmyip-canvas": {
+      "allowedOrigins": ["https://trustmyip.com", "https://www.trustmyip.com"],
+      "titleTerms": ["trustmyip", "canvas"],
+      "requiredDom": [
+        {"id": "trustmyip-canvas-heading", "terms": ["canvas fingerprint test", "gpu fingerprint scanner active"]},
+        {"id": "trustmyip-canvas-renderer", "terms": ["webgl renderer"], "selectors": ["div:has(> #res-webgl)"]},
+        {"id": "trustmyip-canvas-data-size", "terms": ["canvas data size"], "selectors": ["div:has(> #res-datasize)"]},
+        {"id": "trustmyip-canvas-live-render", "terms": ["live gpu canvas render"], "selectors": ["div:has(> div > #fp-canvas) > p:first-child"]},
+        {"id": "trustmyip-canvas-hash-output", "terms": ["canvas hash output", "your canvas fingerprint hash"], "selectors": ["div:has(> #res-hash)"]},
+        {"id": "trustmyip-canvas-gpu", "terms": ["[gpu] webgl renderer"], "selectors": ["div:has(> #log-gpu)"]},
+        {"id": "trustmyip-canvas-font", "terms": ["[font] system font rendering"], "selectors": ["div:has(> #log-font)"]},
+        {"id": "trustmyip-canvas-hash", "terms": [], "selectors": ["#res-hash"], "matchPolicy": "canvasHash"},
+        {"id": "trustmyip-canvas-alert", "terms": ["full canvas data extracted"], "selectors": ["#log-alert"]}
+      ],
+      "expectedValues": [
+        {"key": "trustmyip-canvas.hash", "policy": "present"}
+      ],
+      "forbiddenSignals": [
+        {"id": "trustmyip-canvas-no-hash", "terms": ["canvas hash unavailable", "canvas blocked"]}
+      ]
+    },
+    "checkup-000r": {
+      "allowedOrigins": ["https://checkup.000r.ovh"],
+      "titleTerms": ["000r", "fingerprint checkup"],
+      "requiredDom": [
+        {"id": "checkup-000r-heading", "terms": ["fingerprint checkup", "check what information your browser reveals"]},
+        {"id": "checkup-000r-ip", "terms": ["your ip address", "location:", "isp:"]},
+        {"id": "checkup-000r-network", "terms": ["webrtc", "ssl/tls", "dns"]},
+        {"id": "checkup-000r-rendering", "terms": ["canvas", "webgl", "fonts"]},
+        {"id": "checkup-000r-browser", "terms": ["browser information", "user agent:", "browser:", "version:"]},
+        {"id": "checkup-000r-locale", "terms": ["language:", "languages:", "timezone:", "utc offset:"]},
+        {"id": "checkup-000r-system", "terms": ["system information", "platform:", "cpu cores:", "memory:"]},
+        {"id": "checkup-000r-screen", "terms": ["screen & display", "resolution:", "viewport:"]},
+        {"id": "checkup-000r-privacy", "terms": ["privacy summary", "safe:", "warnings:", "threats:"]},
+        {"id": "checkup-000r-score", "terms": ["score:"]}
+      ],
+      "forbiddenSignals": [
+        {"id": "checkup-000r-threats", "terms": ["threats: 1"]},
+        {"id": "checkup-000r-no-ip", "terms": ["unable to fetch ip", "ip unavailable"]}
+      ]
+    },
+    "browsercheck": {
+      "allowedOrigins": ["https://browsercheck.net", "https://www.browsercheck.net"],
+      "titleTerms": ["browsercheck", "browser check", "printleaks"],
+      "requiredDom": [
+        {"id": "browsercheck-heading", "terms": ["browser check", "browser fingerprint check"]},
+        {"id": "browsercheck-score", "terms": ["trust score", "browser fingerprint realness"]},
+        {"id": "browsercheck-ip", "terms": ["public ip address", "proxy detected"]},
+        {"id": "browsercheck-system-log", "terms": ["system log", "[network]", "[webgl]", "[canvas]", "[fonts]"]},
+        {"id": "browsercheck-risk", "terms": ["risk analysis report", "ip blacklist", "bot detection", "webrtc leak"]},
+        {"id": "browsercheck-browser", "terms": ["browser & system", "browser", "user agent", "language"]},
+        {"id": "browsercheck-hardware", "terms": ["hardware", "screen resolution", "device memory", "cpu cores"]},
+        {"id": "browsercheck-gpu", "terms": ["gpu vendor", "gpu renderer"]},
+        {"id": "browsercheck-fingerprints", "terms": ["fingerprints", "visitor id", "canvas hash", "webgl hash", "fonts hash"]},
+        {"id": "browsercheck-network", "terms": ["network analysis", "webrtc public ip", "dns leak"]},
+        {"id": "browsercheck-time", "terms": ["time & location", "ip timezone", "system timezone"]},
+        {"id": "browsercheck-software", "terms": ["software", "cookies", "incognito"]}
+      ],
+      "expectedValues": [
+        {"key": "browsercheck.realness", "policy": "equals"},
+        {"key": "browsercheck.publicIp", "expectedKey": "webRtc.allowedIps", "policy": "ipInAllowedSet"},
+        {"key": "browsercheck.proxyDetected", "policy": "equals"},
+        {"key": "browsercheck.automationDetected", "policy": "equals"},
+        {"key": "browsercheck.time.IP Timezone", "expectedKey": "run.timezone", "policy": "equals"},
+        {"key": "browsercheck.time.System Timezone", "expectedKey": "run.timezone", "policy": "equals"}
+      ],
+      "forbiddenSignals": [
+        {"id": "browsercheck-suspicious", "terms": ["suspicious / manipulated"]},
+        {"id": "browsercheck-privacy-risks", "terms": ["privacy risks detected"]},
+        {"id": "browsercheck-proxy-detected", "terms": ["proxy detected yes"]},
+        {"id": "browsercheck-automation-detected", "terms": ["automation/bot detected yes", "navigator.webdriver flag is enabled", "bot detection detected!"]},
+        {"id": "browsercheck-stealth-fix", "terms": ["fix:use a stealth driver"]}
+      ]
+    },
+    "antidetect-timezone": {
+      "allowedOrigins": ["https://antidetect.net", "https://www.antidetect.net"],
+      "titleTerms": ["timezone", "antidetect"],
+      "requiredDom": [
+        {"id": "antidetect-timezone-heading", "terms": ["timezone consistency mismatch", "check ip"]},
+        {"id": "antidetect-timezone-browser", "terms": ["browser timezone", "utc"], "selectors": ["#browser-timezone"], "matchPolicy": "nonEmpty"},
+        {"id": "antidetect-timezone-ip-location", "terms": ["ip location"], "selectors": ["#ip-timezone"], "matchPolicy": "nonEmpty"},
+        {"id": "antidetect-timezone-status", "terms": ["perfect match", "no red flags detected"], "selectors": ["#timezone-status"]},
+        {"id": "antidetect-timezone-tests", "terms": ["what this tool tests", "browser timezone", "system time offset", "ip geolocation timezone", "utc offset consistency"]},
+        {"id": "antidetect-timezone-why", "terms": ["why timezone consistency matters", "proxy/vpn masking errors"]},
+        {"id": "antidetect-timezone-how", "terms": ["how it works", "checks your public ip timezone"]}
+      ],
+      "expectedValues": [
+        {"key": "antidetect-timezone.browserTimezone", "expectedKey": "run.timezone", "policy": "equals"},
+        {"key": "antidetect-timezone.ipTimezone", "expectedKey": "run.timezone", "policy": "equals"}
+      ],
+      "forbiddenSignals": [
+        {"id": "antidetect-timezone-minor-mismatch", "terms": ["minor mismatch"]},
+        {"id": "antidetect-timezone-mismatch", "terms": ["timezone mismatch detected", "strong indicator of vpn/proxy usage"]}
+      ]
+    },
+    "nowsecure": {
+      "allowedOrigins": ["https://nowsecure.nl", "https://www.nowsecure.nl"],
+      "titleTerms": ["nowsecure"],
+      "requiredDom": [
+        {"id": "nowsecure-brand", "terms": ["nowsecure"]},
+        {"id": "nowsecure-nodriver", "terms": ["nodriver"]}
+      ],
+      "forbiddenSignals": [
+        {"id": "nowsecure-just-a-moment", "terms": ["just a moment"]},
+        {"id": "nowsecure-attention-required", "terms": ["attention required"]},
+        {"id": "nowsecure-checking-browser", "terms": ["checking your browser"]}
+      ]
+    },
+    "coveryourtracks": {
+      "allowedOrigins": ["https://coveryourtracks.eff.org"],
+      "titleTerms": ["cover your tracks", "eff"],
+      "requiredDom": [
+        {"id": "coveryourtracks-heading", "terms": ["cover your tracks", "see how trackers view your browser"]},
+        {"id": "coveryourtracks-result", "terms": ["test results", "tracking ads", "invisible trackers", "fingerprint"]},
+        {"id": "coveryourtracks-fingerprint", "terms": ["browser fingerprint", "unique", "bits of identifying information"]},
+        {"id": "coveryourtracks-table", "terms": ["characteristic", "one in", "browsers have this value"]},
+        {"id": "coveryourtracks-summary", "terms": ["your browser", "protection"]}
+      ],
+      "forbiddenSignals": [
+        {"id": "coveryourtracks-stuck-testing", "terms": ["testing your browser"]},
+        {"id": "coveryourtracks-no-results", "terms": ["unable to complete", "test failed"]}
+      ]
+    },
+    "amiunique": {
+      "allowedOrigins": ["https://amiunique.org", "https://www.amiunique.org"],
+      "titleTerms": ["amiunique", "am i unique"],
+      "requiredDom": [
+        {"id": "amiunique-heading", "terms": ["my browser fingerprint", "see your browser fingerprint properties"]},
+        {"id": "amiunique-unique", "terms": ["are you unique", "fingerprints in our entire dataset"]},
+        {"id": "amiunique-summary", "terms": ["operating system", "web browser", "language", "timezone"]},
+        {"id": "amiunique-http", "terms": ["http headers attributes", "attribute", "similarity ratio", "value"]},
+        {"id": "amiunique-js", "terms": ["javascript attributes", "user agent", "platform", "cookies enabled"]},
+        {"id": "amiunique-canvas", "terms": ["canvas"]},
+        {"id": "amiunique-fonts", "terms": ["list of fonts", "fonts"]},
+        {"id": "amiunique-screen", "terms": ["screen width", "screen height", "screen depth"]},
+        {"id": "amiunique-permissions", "terms": ["permissions", "geolocation", "notifications"]},
+        {"id": "amiunique-webgl", "terms": ["webgl vendor", "webgl renderer", "webgl parameters"]},
+        {"id": "amiunique-storage", "terms": ["local storage", "session storage", "indexeddb"]},
+        {"id": "amiunique-audio", "terms": ["audio formats", "audio context"]}
+      ],
+      "forbiddenSignals": [
+        {"id": "amiunique-not-loaded", "terms": ["javascript is disabled", "please enable javascript"]},
+        {"id": "amiunique-no-fingerprint", "terms": ["fingerprint not available"]}
+      ]
+    }
+  }
+}

@@ -1,0 +1,724 @@
+{
+  "version": 2,
+  "purpose": "Operational catalog for external browser fingerprint tests.",
+  "defaultWaitMs": 15000,
+  "tests": [
+    {
+      "id": "pixelscan",
+      "group": "core",
+      "url": "https://pixelscan.net/fingerprint-check",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 30000
+      },
+      "read": [
+        "pixelscan-main-heading",
+        "pixelscan-verdict",
+        "pixelscan-browser-card",
+        "pixelscan-location-card",
+        "pixelscan-proxy-card",
+        "pixelscan-fingerprint-card",
+        "pixelscan-bot-card",
+        "pixelscan-ip-address",
+        "pixelscan-webrtc-ip-address",
+        "pixelscan-country",
+        "pixelscan-city",
+        "pixelscan-isp",
+        "pixelscan-latitude",
+        "pixelscan-longitude",
+        "pixelscan-user-type-by-ip",
+        "pixelscan-timezone-js",
+        "pixelscan-time-ip",
+        "pixelscan-screen-resolution",
+        "pixelscan-font-hash",
+        "pixelscan-font-list",
+        "pixelscan-user-agent-http",
+        "pixelscan-user-agent-js",
+        "pixelscan-platform",
+        "pixelscan-do-not-track",
+        "pixelscan-hardware-concurrency",
+        "pixelscan-language-js",
+        "pixelscan-intl-api",
+        "pixelscan-accept-language",
+        "pixelscan-webgl-vendor",
+        "pixelscan-webgl-version",
+        "pixelscan-webgl-renderer",
+        "pixelscan-webgl-hash",
+        "pixelscan-canvas-hash",
+        "pixelscan-audiocontext-hash"
+      ],
+      "failureSurfaces": [
+        "ua-client-hints",
+        "worker-service-worker",
+        "screen-workarea",
+        "webgl-canvas",
+        "webrtc-dns-proxy"
+      ]
+    },
+    {
+      "id": "browserscan",
+      "group": "core",
+      "url": "https://browserscan.org/",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 45000
+      },
+      "read": [
+        "risk-assessment",
+        "risk-level",
+        "ip",
+        "geo",
+        "webrtc",
+        "dns",
+        "tls",
+        "canvas",
+        "webgl",
+        "screen",
+        "hardware",
+        "fonts"
+      ],
+      "failureSurfaces": [
+        "trust-score",
+        "proxy-reputation",
+        "webrtc-dns-proxy",
+        "tls-ua-mismatch",
+        "hardware-fingerprint"
+      ]
+    },
+    {
+      "id": "iphey",
+      "group": "core",
+      "url": "https://iphey.com/",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 45000
+      },
+      "read": [
+        "trust-status",
+        "ip",
+        "location",
+        "hardware",
+        "software",
+        "fonts",
+        "plugins",
+        "behavior",
+        "vpn-proxy"
+      ],
+      "failureSurfaces": [
+        "ip-location",
+        "timezone-language",
+        "proxy-vpn",
+        "bot-behavior",
+        "rare-browser-profile"
+      ]
+    },
+    {
+      "id": "printleaks",
+      "group": "core",
+      "url": "https://www.printleaks.com/",
+      "status": "mapped",
+      "run": {
+        "type": "click-if-present",
+        "selectorHints": [
+          "button",
+          "input[type=submit]"
+        ],
+        "waitMs": 45000
+      },
+      "read": [
+        "webgl",
+        "audio-context",
+        "fonts",
+        "screen",
+        "cpu-gpu",
+        "webrtc",
+        "navigator",
+        "permissions",
+        "plugins",
+        "storage"
+      ],
+      "failureSurfaces": [
+        "webgl-audio-canvas",
+        "font-set",
+        "navigator-permissions",
+        "webrtc-policy",
+        "hardware-profile"
+      ]
+    },
+    {
+      "id": "creepjs",
+      "group": "core",
+      "url": "https://abrahamjuliot.github.io/creepjs/",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitText": "FP ID",
+        "waitMs": 20000
+      },
+      "read": [
+        "lies",
+        "bold-fail",
+        "webrtc",
+        "timezone",
+        "intl",
+        "headless",
+        "worker",
+        "webgl",
+        "screen",
+        "canvas2d",
+        "fonts",
+        "audio",
+        "speech",
+        "css-media",
+        "navigator",
+        "status"
+      ],
+      "failureSurfaces": [
+        "surface-script",
+        "screen-workarea",
+        "speech-locale",
+        "webgl-offscreen",
+        "canvas-2d",
+        "navigator"
+      ]
+    },
+    {
+      "id": "browserleaks-ip",
+      "group": "network",
+      "url": "https://browserleaks.com/ip",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 10000
+      },
+      "optionalActions": [
+        {
+          "selector": "#dns-run",
+          "label": "Run DNS Leak Test",
+          "waitMs": 30000
+        }
+      ],
+      "read": [
+        "ipv4",
+        "ipv6",
+        "asn",
+        "hostname",
+        "geo",
+        "dns-link",
+        "webrtc-link"
+      ],
+      "failureSurfaces": [
+        "proxy",
+        "vpn",
+        "dns",
+        "webrtc"
+      ]
+    },
+    {
+      "id": "browserleaks-dns",
+      "group": "network",
+      "url": "https://browserleaks.com/dns",
+      "status": "mapped",
+      "run": {
+        "type": "click-if-present",
+        "selectorHints": [
+          "button",
+          "input[type=submit]"
+        ],
+        "waitMs": 45000
+      },
+      "read": [
+        "dns-resolvers",
+        "asn",
+        "country",
+        "city"
+      ],
+      "failureSurfaces": [
+        "dns-leak",
+        "proxy-dns-policy"
+      ]
+    },
+    {
+      "id": "browserleaks-webrtc",
+      "group": "network",
+      "url": "https://browserleaks.com/webrtc",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 20000
+      },
+      "read": [
+        "public-ip",
+        "local-ip-candidates",
+        "mdns",
+        "stun",
+        "ice-candidates"
+      ],
+      "failureSurfaces": [
+        "webrtc-ip-policy",
+        "stun-udp-leak"
+      ]
+    },
+    {
+      "id": "ipleak",
+      "group": "network",
+      "url": "https://ipleak.net",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 60000
+      },
+      "read": [
+        "ip",
+        "dns",
+        "webrtc",
+        "geolocation"
+      ],
+      "failureSurfaces": [
+        "dns",
+        "webrtc",
+        "proxy"
+      ]
+    },
+    {
+      "id": "browserleaks-javascript",
+      "group": "identity",
+      "url": "https://browserleaks.com/javascript",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 10000
+      },
+      "read": [
+        "navigator",
+        "screen",
+        "timezone",
+        "storage",
+        "plugins",
+        "mimeTypes",
+        "languages",
+        "hardware",
+        "permissions"
+      ],
+      "failureSurfaces": [
+        "navigator",
+        "screen",
+        "plugins",
+        "languages",
+        "permissions"
+      ]
+    },
+    {
+      "id": "browserleaks-client-hints",
+      "group": "identity",
+      "url": "https://browserleaks.com/client-hints",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 10000
+      },
+      "read": [
+        "sec-ch-ua",
+        "full-version",
+        "platform",
+        "architecture",
+        "bitness",
+        "mobile",
+        "model"
+      ],
+      "failureSurfaces": [
+        "network-user-agent-override",
+        "ua-metadata",
+        "worker-user-agent-data"
+      ]
+    },
+    {
+      "id": "whatsmybrowser",
+      "group": "identity",
+      "url": "https://www.whatsmybrowser.org",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 10000
+      },
+      "read": [
+        "browser",
+        "version",
+        "platform"
+      ],
+      "failureSurfaces": [
+        "user-agent",
+        "platform"
+      ]
+    },
+    {
+      "id": "browserleaks-canvas",
+      "group": "render",
+      "url": "https://browserleaks.com/canvas",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 15000
+      },
+      "read": [
+        "canvas-hash",
+        "png-data-url",
+        "text-metrics"
+      ],
+      "failureSurfaces": [
+        "accelerated-2d-canvas",
+        "fonts",
+        "text-metrics",
+        "canvas-api-patch"
+      ]
+    },
+    {
+      "id": "browserleaks-webgl",
+      "group": "render",
+      "url": "https://browserleaks.com/webgl",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 15000
+      },
+      "read": [
+        "vendor",
+        "renderer",
+        "unmasked-vendor",
+        "unmasked-renderer",
+        "extensions",
+        "parameters"
+      ],
+      "failureSurfaces": [
+        "webgl-caps",
+        "offscreen-webgl",
+        "debug-renderer-info",
+        "angle-backend"
+      ]
+    },
+    {
+      "id": "webgl-report",
+      "group": "render",
+      "url": "https://webglreport.com",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 15000
+      },
+      "read": [
+        "webgl1",
+        "webgl2",
+        "renderer",
+        "vendor",
+        "extensions",
+        "max-texture",
+        "viewport",
+        "precision"
+      ],
+      "failureSurfaces": [
+        "gpu",
+        "angle",
+        "webgl-capabilities"
+      ]
+    },
+    {
+      "id": "browserleaks-fonts",
+      "group": "render",
+      "url": "https://browserleaks.com/fonts",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 30000
+      },
+      "read": [
+        "font-list",
+        "font-count",
+        "font-access"
+      ],
+      "failureSurfaces": [
+        "host-fonts",
+        "profile-fonts",
+        "canvas-text-metrics"
+      ]
+    },
+    {
+      "id": "browserleaks-geo",
+      "group": "render",
+      "url": "https://browserleaks.com/geo",
+      "status": "mapped",
+      "run": {
+        "type": "permission-dependent",
+        "waitMs": 30000
+      },
+      "read": [
+        "permission-state",
+        "latitude",
+        "longitude",
+        "accuracy"
+      ],
+      "failureSurfaces": [
+        "permissions",
+        "geolocation",
+        "ip-timezone-geo"
+      ]
+    },
+    {
+      "id": "browserleaks-tls",
+      "group": "render",
+      "url": "https://browserleaks.com/tls",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 15000
+      },
+      "read": [
+        "tls-fingerprint",
+        "http-protocol",
+        "cipher-suites"
+      ],
+      "failureSurfaces": [
+        "proxy-mitm",
+        "tls-stack",
+        "ua-tls-mismatch"
+      ]
+    },
+    {
+      "id": "trustmyip-proxy",
+      "group": "network",
+      "url": "https://trustmyip.com/proxy-checker",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 30000
+      },
+      "read": [
+        "connection-type",
+        "proxy-headers",
+        "forwarded-ips",
+        "protocol",
+        "webrtc",
+        "ip-match",
+        "timezone"
+      ],
+      "failureSurfaces": [
+        "transparent-proxy-headers",
+        "forwarded-ip-leak",
+        "webrtc-real-ip",
+        "timezone-mismatch"
+      ]
+    },
+    {
+      "id": "trustmyip-timezone",
+      "group": "network",
+      "url": "https://trustmyip.com/timezone-dissonance",
+      "status": "mapped",
+      "run": {
+        "type": "click",
+        "selector": "button[onclick^=\"runTimezoneTest\"]",
+        "label": "Run Timezone Dissonance Test",
+        "waitMs": 30000
+      },
+      "read": [
+        "ip-timezone",
+        "browser-timezone",
+        "timezone-mismatch",
+        "ip-location"
+      ],
+      "failureSurfaces": [
+        "ip-browser-timezone-mismatch",
+        "proxy-geo",
+        "locale-policy"
+      ]
+    },
+    {
+      "id": "trustmyip-canvas",
+      "group": "render",
+      "url": "https://trustmyip.com/canvas",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 30000
+      },
+      "read": [
+        "canvas-2d-fingerprint",
+        "webgl-fingerprint",
+        "gpu",
+        "browser-leak-summary"
+      ],
+      "failureSurfaces": [
+        "canvas-hash",
+        "webgl-hash",
+        "gpu-profile",
+        "render-consistency"
+      ]
+    },
+    {
+      "id": "checkup-000r",
+      "group": "secondary",
+      "url": "https://checkup.000r.ovh/",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 30000
+      },
+      "read": [
+        "webrtc",
+        "canvas",
+        "webgl",
+        "fonts",
+        "browser-revealed-data"
+      ],
+      "failureSurfaces": [
+        "webrtc-leak",
+        "canvas-webgl",
+        "font-enumeration",
+        "navigator-profile"
+      ]
+    },
+    {
+      "id": "browsercheck",
+      "group": "secondary",
+      "url": "https://browsercheck.net/",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 30000
+      },
+      "read": [
+        "ip-timezone",
+        "browser-timezone",
+        "language",
+        "webrtc",
+        "canvas",
+        "webgl"
+      ],
+      "failureSurfaces": [
+        "ip-browser-timezone-mismatch",
+        "locale-policy",
+        "webrtc-policy",
+        "automation-detected",
+        "egress-reputation"
+      ]
+    },
+    {
+      "id": "antidetect-timezone",
+      "group": "secondary",
+      "url": "https://antidetect.net/timezone-checker.html",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 30000
+      },
+      "read": [
+        "ip-timezone",
+        "browser-timezone",
+        "timezone-match"
+      ],
+      "failureSurfaces": [
+        "ip-browser-timezone-mismatch",
+        "locale-policy"
+      ]
+    },
+    {
+      "id": "coveryourtracks",
+      "group": "uniqueness",
+      "url": "https://coveryourtracks.eff.org/",
+      "status": "mapped",
+      "run": {
+        "type": "click",
+        "selector": "#kcarterlink",
+        "label": "TEST YOUR BROWSER",
+        "waitMs": 90000
+      },
+      "read": [
+        "tracking-protection",
+        "fingerprint-uniqueness",
+        "attribute-table"
+      ],
+      "failureSurfaces": [
+        "rare-attributes",
+        "fonts",
+        "canvas",
+        "screen",
+        "webgl",
+        "ua",
+        "timezone"
+      ]
+    },
+    {
+      "id": "amiunique",
+      "group": "uniqueness",
+      "url": "https://amiunique.org/fingerprint",
+      "status": "mapped",
+      "run": {
+        "type": "spa-auto-or-consent",
+        "waitMs": 60000
+      },
+      "read": [
+        "uniqueness",
+        "attribute-table",
+        "browser",
+        "os",
+        "fonts",
+        "plugins",
+        "canvas",
+        "webgl"
+      ],
+      "failureSurfaces": [
+        "rare-combination",
+        "screen",
+        "fonts",
+        "webgl",
+        "locale"
+      ]
+    },
+    {
+      "id": "sannysoft",
+      "group": "secondary",
+      "url": "https://bot.sannysoft.com",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 15000
+      },
+      "read": [
+        "webdriver",
+        "chrome-object",
+        "permissions",
+        "plugins",
+        "languages",
+        "webgl",
+        "hairline",
+        "fingerprint-scanner"
+      ],
+      "failureSurfaces": [
+        "webdriver",
+        "chrome-runtime",
+        "permissions",
+        "plugins",
+        "languages",
+        "webgl"
+      ]
+    },
+    {
+      "id": "nowsecure",
+      "group": "core",
+      "url": "https://nowsecure.nl",
+      "status": "mapped",
+      "run": {
+        "type": "auto",
+        "waitMs": 15000
+      },
+      "read": [
+        "cloudflare-challenge",
+        "page-title",
+        "challenge-form-absent",
+        "page-content"
+      ],
+      "notes": "Cloudflare Turnstile real-browser check. Tem teste JUnit em StealthFingerprintRealSiteChecks @Order(71)"
+    }
+  ]
+}

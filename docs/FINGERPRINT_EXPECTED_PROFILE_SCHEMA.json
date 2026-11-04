@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "purpose": "Run-level expected profile schema for the fingerprint contract gate.",
+  "format": "flat-key-value",
+  "requiredTopLevelGroups": [
+    "run",
+    "proxy",
+    "browser",
+    "location",
+    "timezone",
+    "locale",
+    "network",
+    "screen",
+    "hardware",
+    "rendering",
+    "sites"
+  ],
+  "semantics": {
+    "flatKeys": "Contracts address values with dotted keys such as pixelscan.location.Country.",
+    "missingDynamicValue": "A mapped dynamic field fails the official gate unless the contract policy is present-only.",
+    "presentPolicy": "The actual DOM value must be non-empty; no literal expected value is required.",
+    "forbiddenSignals": "Forbidden signals are validated from the site contract, not from expected-profile values."
+  },
+  "example": {
+    "run.profileCountry": "BR",
+    "run.locale": "pt-BR",
+    "run.timezone": "America/Sao_Paulo",
+    "run.languages": "pt-BR,pt,en-US,en",
+    "run.geo": "-23.1798,-46.8816",
+    "pixelscan.location.Country": "Brazil",
+    "pixelscan.location.City": "Jundiai",
+    "pixelscan.dateTime.Timezone from JS": "America/Sao_Paulo",
+    "pixelscan.screen.Resolution": "1920x1080",
+    "pixelscan.userAgent.Platform": "Linux x86_64"
+  }
+}
