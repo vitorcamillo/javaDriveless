@@ -24,6 +24,16 @@ public class ExpectedConditions {
     }
 
     /**
+     * Restaura o flag de interrupção da thread quando a exceção é InterruptedException.
+     * Sem isso, o Thread.sleep do WebDriverWait não percebe a interrupção e o polling continua.
+     */
+    private static void restaurarInterrupcao(Exception e) {
+        if (e instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
      * Aguarda até o título da página conter o texto especificado
      */
     public static Function<Object, Boolean> titleContains(String title) {
@@ -37,6 +47,7 @@ public class ExpectedConditions {
                 }
                 return false;
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -56,6 +67,7 @@ public class ExpectedConditions {
                 }
                 return false;
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -74,6 +86,7 @@ public class ExpectedConditions {
                 }
                 return false;
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -92,6 +105,7 @@ public class ExpectedConditions {
                 }
                 return false;
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -110,6 +124,7 @@ public class ExpectedConditions {
                 }
                 return false;
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -130,6 +145,7 @@ public class ExpectedConditions {
                 }
                 return false;
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -152,6 +168,7 @@ public class ExpectedConditions {
                 WebElement el = firstElement(driver, selector);
                 return el != null && el.isDisplayed().get();
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -167,6 +184,7 @@ public class ExpectedConditions {
                 WebElement el = firstElement(driver, selector);
                 return el != null && el.isDisplayed().get() && el.isEnabled().get();
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -185,6 +203,7 @@ public class ExpectedConditions {
                 String content = el.getText().get();
                 return content != null && content.contains(text);
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };
@@ -204,6 +223,7 @@ public class ExpectedConditions {
             List<WebElement> els = target.findElements(By.CSS_SELECTOR, selector, 0f).get();
             return els.isEmpty() ? null : els.get(0);
         } catch (Exception e) {
+            restaurarInterrupcao(e);
             return null;
         }
     }
@@ -221,6 +241,7 @@ public class ExpectedConditions {
                 }
                 return false;
             } catch (Exception e) {
+                restaurarInterrupcao(e);
                 return false;
             }
         };

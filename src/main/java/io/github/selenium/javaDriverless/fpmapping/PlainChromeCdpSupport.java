@@ -137,7 +137,13 @@ abstract class PlainChromeCdpSupport {
         args.put("expression", expression);
         args.put("returnByValue", true);
         args.put("awaitPromise", true);
-        return target.executeCdpCmd("Runtime.evaluate", args, timeout).join();
+        JsonNode result = target.executeCdpCmd("Runtime.evaluate", args, timeout).join();
+        if (result != null && result.has("exceptionDetails")) {
+            // Só o text: exception.description pode conter conteúdo da página.
+            System.out.println("Runtime.evaluate failed: "
+                    + result.path("exceptionDetails").path("text").asText(""));
+        }
+        return result;
     }
 
     static void captureScreenshot(Target target, Path output) {

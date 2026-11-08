@@ -26,7 +26,7 @@ public class CreepJsManualRunner {
                 .thenCompose(v -> {
                     System.out.println("⏳ Aguardando análise (30s)...");
                     return CompletableFuture.runAsync(() -> {
-                        try { TimeUnit.SECONDS.sleep(30); } catch (InterruptedException e) {}
+                        try { TimeUnit.SECONDS.sleep(30); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
                     });
                 })
                 .thenCompose(v -> {

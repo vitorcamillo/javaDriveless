@@ -3,6 +3,7 @@ package io.github.selenium.javaDriverless.fpmapping;
 import io.github.selenium.javaDriverless.types.BrowserFingerprintProfile;
 import io.github.selenium.javaDriverless.types.ChromeOptions;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.HashMap;
@@ -35,10 +36,14 @@ final class FingerprintMappingLocationProfile {
             profile.timezoneId = args.timezone();
         }
         if (args.languages() != null) {
-            profile.languages = List.of(args.languages().split(","));
+            profile.languages = Arrays.stream(args.languages().split(","))
+                    .map(String::trim).filter(s -> !s.isEmpty()).toList();
         }
         if (args.geo() != null) {
             String[] parts = args.geo().split(",", 2);
+            if (parts.length != 2) {
+                throw new IllegalArgumentException("--geo deve ser latitude,longitude: " + args.geo());
+            }
             profile.geolocation.mode = "override";
             profile.geolocation.latitude = Double.parseDouble(parts[0]);
             profile.geolocation.longitude = Double.parseDouble(parts[1]);

@@ -113,7 +113,7 @@ final class FingerprintMappingScripts {
               const weak = [];
               if (navigator.webdriver === true) strong.push('navigator.webdriver=true');
               if (/HeadlessChrome/i.test(ua)) strong.push('HeadlessChrome userAgent');
-              if (/webdriver\\\\s*(true|detected|present)/i.test(text)) strong.push('webdriver text');
+              if (/webdriver\\s*(true|detected|present)/i.test(text)) strong.push('webdriver text');
               if (hasPositive('browser fingerprint is inconsistent')) strong.push('PixelScan inconsistent');
               if (hasPositive('masking detected')) strong.push('PixelScan masking detected');
               if (hasPositive('automated behavior detected')) strong.push('PixelScan bot detected');
@@ -122,7 +122,7 @@ final class FingerprintMappingScripts {
                   && !/Headless browsers and virtual machines produce distinctive/i.test(text)) {
                 weak.push('page mentions headless');
               }
-              if (/\\\\blies?\\\\b/i.test(text)) weak.push('page mentions lies');
+              if (/\\blies?\\b/i.test(text)) weak.push('page mentions lies');
               if (/inconsistent/i.test(text) && !/browser fingerprint is consistent/i.test(text)) {
                 weak.push('page mentions inconsistent');
               }

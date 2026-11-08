@@ -337,11 +337,12 @@ public class Utils {
             try {
                 if (fromResources) {
                     // Ler de resources
-                    var stream = Utils.class.getClassLoader().getResourceAsStream(filename);
-                    if (stream == null) {
-                        throw new IOException("Recurso não encontrado: " + filename);
+                    try (var stream = Utils.class.getClassLoader().getResourceAsStream(filename)) {
+                        if (stream == null) {
+                            throw new IOException("Recurso não encontrado: " + filename);
+                        }
+                        return new String(stream.readAllBytes(), encoding);
                     }
-                    return new String(stream.readAllBytes(), encoding);
                 } else {
                     // Ler de arquivo
                     return Files.readString(Paths.get(filename), java.nio.charset.Charset.forName(encoding));

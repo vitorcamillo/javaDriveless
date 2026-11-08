@@ -53,9 +53,11 @@ abstract class TargetConnectionCore implements CDPCommandExecutor {
 
     protected final Map<String, Object> globalThis = new ConcurrentHashMap<>();
     protected Object documentElem;
-    protected Object alert;
+    protected volatile Object alert;
 
-    protected CDPSocket socket;
+    // Publicado somente depois de conectado e pronto (listeners registrados);
+    // volatile garante que outras threads não vejam o socket pela metade.
+    protected volatile CDPSocket socket;
     protected String isolatedContextId;
     protected String execContextId;
     protected final Map<String, Target> targets = new ConcurrentHashMap<>();
@@ -80,6 +82,9 @@ abstract class TargetConnectionCore implements CDPCommandExecutor {
     protected final ReentrantLock sendKeyLock = new ReentrantLock();
     // Cauda da digitação, guardada por sendKeyLock; serializa chamadas concorrentes de sendKeys.
     protected CompletableFuture<Void> sendKeyTail;
+
+    // Inicialização em andamento; evita conexões duplicadas em chamadas concorrentes de init().
+    private CompletableFuture<Target> initFuture;
 
     /**
      * Cria um novo Target.
@@ -191,38 +196,60 @@ abstract class TargetConnectionCore implements CDPCommandExecutor {
         if (socket != null) {
             return CompletableFuture.completedFuture((Target) this);
         }
-
-        return CompletableFuture.supplyAsync(() -> {
-            if (CdpPipeRegistry.isPipeHost(host)) {
-                socket = CdpPipeRegistry.lookup(host)
-                        .orElseThrow(() -> new IllegalStateException("Canal CDP pipe indisponível"))
-                        .attachToTarget(id, timeout).join();
-            } else {
-                String wsUrl = String.format("ws://%s/devtools/page/%s", host, id);
-                socket = new CDPSocket(wsUrl, timeout, maxWsSize);
-                socket.connectAsync().join();
+        synchronized (this) {
+            if (socket != null) {
+                return CompletableFuture.completedFuture((Target) this);
             }
+            if (initFuture != null) {
+                return initFuture;
+            }
+            CompletableFuture<Target> tentativa = CompletableFuture.supplyAsync(this::conectar);
+            initFuture = tentativa;
+            tentativa.whenComplete((ignorado, falha) -> {
+                synchronized (TargetConnectionCore.this) {
+                    if (initFuture == tentativa) {
+                        initFuture = null;
+                    }
+                }
+            });
+            return tentativa;
+        }
+    }
 
-            pointer = new Pointer((Target) this);
+    /**
+     * Conecta o socket CDP, registra os listeners e publica {@code socket} por último,
+     * de modo que {@code socket != null} implique conexão pronta.
+     */
+    private Target conectar() {
+        CDPSocket conexao;
+        if (CdpPipeRegistry.isPipeHost(host)) {
+            conexao = CdpPipeRegistry.lookup(host)
+                    .orElseThrow(() -> new IllegalStateException("Canal CDP pipe indisponível"))
+                    .attachToTarget(id, timeout).join();
+        } else {
+            String wsUrl = String.format("ws://%s/devtools/page/%s", host, id);
+            conexao = new CDPSocket(wsUrl, timeout, maxWsSize);
+            conexao.connectAsync().join();
+        }
 
-            // Configurar listeners de eventos
-            addCdpListener("Page.javascriptDialogOpening", params -> {
-                // TODO: Criar objeto Alert
-                this.alert = params;
-            }).join();
+        pointer = new Pointer((Target) this);
 
-            addCdpListener("Page.javascriptDialogClosed", params -> {
-                this.alert = null;
-            }).join();
-
-            addCdpListener("Page.loadEventFired", params -> onLoaded()).join();
-            addCdpListener("Page.windowOpen", params -> onLoaded()).join();
-
-            // Adicionar callbacks de fechamento
-            socket.getOnClosed().addAll(onClosed);
-
-            return (Target) this;
+        // Configurar listeners de eventos
+        conexao.addListener("Page.javascriptDialogOpening", params -> {
+            this.alert = params;
         });
+        conexao.addListener("Page.javascriptDialogClosed", params -> {
+            this.alert = null;
+        });
+        conexao.addListener("Page.loadEventFired", params -> onLoaded());
+        conexao.addListener("Page.windowOpen", params -> onLoaded());
+
+        // Adicionar callbacks de fechamento
+        conexao.getOnClosed().addAll(onClosed);
+
+        // Publicar por último: init() concorrente só enxerga socket já pronto.
+        socket = conexao;
+        return (Target) this;
     }
 
     /**
@@ -350,7 +377,7 @@ abstract class TargetConnectionCore implements CDPCommandExecutor {
      */
     public CompletableFuture<List<JsonNode>> getCdpEventIter(String event) {
         if (socket == null) {
-            return CompletableFuture.completedFuture(new ArrayList<>());
+            return init().thenCompose(t -> getCdpEventIter(event));
         }
 
         List<JsonNode> events = cdpEventIters.computeIfAbsent(event, name -> {

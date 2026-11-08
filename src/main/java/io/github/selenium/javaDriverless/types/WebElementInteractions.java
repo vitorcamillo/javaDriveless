@@ -2,6 +2,7 @@ package io.github.selenium.javaDriverless.types;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 final class WebElementInteractions {
     private WebElementInteractions() {
@@ -95,10 +96,10 @@ final class WebElementInteractions {
 
         return element.target.executeCdpCmd("Input.dispatchKeyEvent", downArgs, null)
             .thenCompose(v -> element.target.executeCdpCmd("Input.dispatchKeyEvent", charArgs, null))
-            .thenCompose(v -> {
-                try { Thread.sleep(30 + (long)(Math.random() * 50)); } catch (InterruptedException ignored) {}
-                return element.target.executeCdpCmd("Input.dispatchKeyEvent", upArgs, null);
-            })
+            // Espera não bloqueante (delayedExecutor): Thread.sleep aqui trava thread do ForkJoinPool.
+            .thenCompose(v -> CompletableFuture.runAsync(() -> {},
+                CompletableFuture.delayedExecutor(30 + (long) (Math.random() * 50), TimeUnit.MILLISECONDS)))
+            .thenCompose(v -> element.target.executeCdpCmd("Input.dispatchKeyEvent", upArgs, null))
             .thenApply(v -> null);
     }
 }

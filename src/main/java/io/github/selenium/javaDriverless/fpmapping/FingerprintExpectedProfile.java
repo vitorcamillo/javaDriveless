@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -61,7 +62,8 @@ final class FingerprintExpectedProfile {
         String languages = expected.getOrDefault("run.languages", expected.get("languages"));
         if (languages != null && !languages.isBlank()) {
             expected.putIfAbsent("http.acceptLanguage", FingerprintCdpOverrides.acceptLanguageHttpHeader(
-                    List.of(languages.split(","))));
+                    Arrays.stream(languages.split(",")).map(String::trim)
+                            .filter(s -> !s.isEmpty()).toList()));
         }
         if (args.geo() != null) {
             String[] parts = args.geo().split(",", 2);

@@ -62,7 +62,7 @@ normalize_uint() {
 append_remove_default_argument() {
   local argument=$1
   local current=${JAVA_DRIVERLESS_REMOVE_DEFAULT_ARGS:-}
-  if [[ "$current" != *"$argument"* ]]; then
+  if [[ ",$current," != *",$argument,"* ]]; then
     current=${current:+"$current,"}$argument
   fi
   export JAVA_DRIVERLESS_REMOVE_DEFAULT_ARGS=$current
@@ -262,6 +262,7 @@ if [[ "$display" == "auto" ]]; then
   Xvfb -displayfd 3 -screen 0 "$screen_spec" -nolisten tcp -noreset \
     3>"$display_number_file" >"$xvfb_log" 2>&1 &
 else
+  ! DISPLAY="$display" xprop -root >/dev/null 2>&1 || die "display $display is already in use"
   Xvfb "$display" -screen 0 "$screen_spec" -nolisten tcp -noreset \
     >"$xvfb_log" 2>&1 &
 fi

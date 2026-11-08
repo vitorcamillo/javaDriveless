@@ -6,6 +6,7 @@ import io.github.selenium.javaDriverless.types.Target;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
@@ -61,7 +62,7 @@ public class DriverUtils {
         return cdpExec.apply(Collections.singletonMap("cmd", "Target.getTargets"))
             .thenCompose(result -> {
                 JsonNode targetInfos = result.get("targetInfos");
-                Map<String, TargetInfo> infos = new HashMap<>();
+                Map<String, TargetInfo> infos = new ConcurrentHashMap<>();
                 List<CompletableFuture<Void>> futures = new ArrayList<>();
                 
                 for (JsonNode info : targetInfos) {
@@ -204,8 +205,14 @@ public class DriverUtils {
             }
         }
         
+        Map<String, Object> cookie = new HashMap<>(cookieDict);
+        if (cookie.containsKey("expiry") && !cookie.containsKey("expires")) {
+            cookie.put("expires", cookie.get("expiry"));
+        }
+        cookie.remove("expiry");
+
         Map<String, Object> args = new HashMap<>();
-        args.put("cookies", Collections.singletonList(cookieDict));
+        args.put("cookies", Collections.singletonList(cookie));
         
         if (contextId != null) {
             args.put("browserContextId", contextId);

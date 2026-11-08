@@ -105,8 +105,8 @@ final class FingerprintMappingExpectations {
         String normalizedTerm = FingerprintMappingText.normalize(term);
         int index = text.indexOf(normalizedTerm);
         while (index >= 0) {
-            int prefixStart = Math.max(0, index - 3);
-            if (!"no ".equals(text.substring(prefixStart, index))) {
+            boolean negado = text.startsWith("no ", index - 3) || text.startsWith("not ", index - 4);
+            if (!negado) {
                 return true;
             }
             index = text.indexOf(normalizedTerm, index + normalizedTerm.length());

@@ -39,6 +39,7 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
 
     private final AtomicLong commandIdCounter = new AtomicLong(1);
     private final Map<Long, CompletableFuture<JsonNode>> pendingCommands = new ConcurrentHashMap<>();
+    private final Set<CompletableFuture<JsonNode>> pendingWaits = ConcurrentHashMap.newKeySet();
     private final Map<String, List<Consumer<JsonNode>>> eventListeners = new ConcurrentHashMap<>();
     private final Map<String, List<BiConsumer<String, JsonNode>>> sessionEventListeners = new ConcurrentHashMap<>();
     private final Map<String, BlockingQueue<JsonNode>> eventQueues = new ConcurrentHashMap<>();
@@ -49,6 +50,7 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
     private final int maxSize;
     private volatile boolean connected = false;
     private volatile boolean closing = false;
+    private volatile boolean closed = false;
 
     /**
      * Cria uma nova conexão CDP Socket.
@@ -135,6 +137,7 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
         // The DevTools websocket path acts as a session capability; never log the URI.
         JavaDriverlessLogger.debug(logger, "Conexão WebSocket CDP aberta");
         connected = true;
+        closed = false;
     }
 
     @Override
@@ -237,12 +240,19 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
                 "Conexão WebSocket CDP fechada: código={}, razãoInformada={}, remoto={}",
                 code, reason != null && !reason.isBlank(), remote);
         connected = false;
+        closed = true;
 
         // Completa todos os comandos pendentes com exceção
         for (CompletableFuture<JsonNode> future : pendingCommands.values()) {
             future.completeExceptionally(new CDPException("Conexão WebSocket fechada"));
         }
         pendingCommands.clear();
+
+        // Esperas de eventos órfãs falham junto: sem isso, waitFor(event, null) pende para sempre
+        for (CompletableFuture<JsonNode> future : pendingWaits) {
+            future.completeExceptionally(new CDPException("Conexão WebSocket fechada"));
+        }
+        pendingWaits.clear();
 
         // Executa callbacks de fechamento
         for (Runnable callback : onClosedCallbacks) {
@@ -354,6 +364,7 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
      */
     public CompletableFuture<JsonNode> waitFor(String event, Float timeout) {
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
+        pendingWaits.add(future);
 
         Consumer<JsonNode> listener = params -> {
             future.complete(params);
@@ -364,7 +375,14 @@ public class CDPSocket extends WebSocketClient implements CdpConnection {
         // Remove listener após completar
         future.whenComplete((result, error) -> {
             removeListener(event, listener);
+            pendingWaits.remove(future);
         });
+
+        // Registro antes da checagem de closed: fecha a corrida com onClose
+        if (closed) {
+            future.completeExceptionally(new CDPException("Conexão WebSocket fechada"));
+            return future;
+        }
 
         // Aplica timeout se especificado
         if (timeout != null && timeout > 0) {

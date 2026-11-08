@@ -6,6 +6,7 @@ import io.github.selenium.javaDriverless.scripts.Geometry;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -418,6 +419,15 @@ public class Pointer {
     }
 
     /**
+     * Pausa não bloqueante dentro da cadeia de futuros: Thread.sleep bloquearia
+     * a thread do ForkJoinPool que executa os callbacks.
+     */
+    private static CompletableFuture<Void> pausa(long millis) {
+        return CompletableFuture.runAsync(() -> {},
+            CompletableFuture.delayedExecutor(millis, TimeUnit.MILLISECONDS));
+    }
+
+    /**
      * Arrasta e solta de uma posição para outra.
      *
      * @param fromX coordenada X inicial
@@ -430,14 +440,10 @@ public class Pointer {
     public CompletableFuture<Void> dragAndDrop(int fromX, int fromY, int toX, int toY, double totalTime) {
         return moveTo(fromX, fromY, totalTime / 2, 2.0, 20.0)
             .thenCompose(v -> down(fromX, fromY, MouseButton.LEFT, 1))
-            .thenCompose(v -> {
-                PointerTiming.sleepMillis(100); // Pequeno delay após pressionar
-                return moveTo(toX, toY, totalTime / 2, 2.0, 20.0);
-            })
-            .thenCompose(v -> {
-                PointerTiming.sleepMillis(100); // Pequeno delay antes de soltar
-                return up(toX, toY, MouseButton.LEFT, 1);
-            });
+            .thenCompose(v -> pausa(100)) // Pequeno delay após pressionar
+            .thenCompose(v -> moveTo(toX, toY, totalTime / 2, 2.0, 20.0))
+            .thenCompose(v -> pausa(100)) // Pequeno delay antes de soltar
+            .thenCompose(v -> up(toX, toY, MouseButton.LEFT, 1));
     }
 
     /**

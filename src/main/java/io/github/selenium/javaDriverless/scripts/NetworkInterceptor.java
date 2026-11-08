@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
@@ -233,7 +234,7 @@ public class NetworkInterceptor {
         private final Map<String, String> guardedHeaders;
         private final UnaryOperator<Map<String, String>> headerGuard;
         private final Consumer<Throwable> failureSink;
-        private boolean done = false;
+        private final AtomicBoolean done = new AtomicBoolean(false);
 
         public InterceptedRequest(String requestId, String frameId, JsonNode request, Object target) {
             this(requestId, frameId, request, target, null, UnaryOperator.identity(), ignored -> {
@@ -265,7 +266,7 @@ public class NetworkInterceptor {
         }
 
         public boolean isDone() {
-            return done;
+            return done.get();
         }
 
         /**
@@ -274,7 +275,7 @@ public class NetworkInterceptor {
          * @return CompletableFuture que completa quando a requisição continua
          */
         public CompletableFuture<Void> continueRequest() {
-            if (done) {
+            if (done.get()) {
                 throw new RequestDoneException(this, getUrl());
             }
 
@@ -284,7 +285,9 @@ public class NetworkInterceptor {
                 args.put("headers", toHeaderEntries(guardedHeaders));
             }
 
-            done = true;
+            if (!done.compareAndSet(false, true)) {
+                throw new RequestDoneException(this, getUrl());
+            }
             return observeFailure(execute(target, "Fetch.continueRequest", args));
         }
 
@@ -295,7 +298,7 @@ public class NetworkInterceptor {
          * @return CompletableFuture que completa quando a requisição falha
          */
         public CompletableFuture<Void> failRequest(String errorReason) {
-            if (done) {
+            if (done.get()) {
                 throw new RequestDoneException(this, getUrl());
             }
 
@@ -303,7 +306,9 @@ public class NetworkInterceptor {
             args.put("requestId", requestId);
             args.put("errorReason", errorReason != null ? errorReason : "Failed");
 
-            done = true;
+            if (!done.compareAndSet(false, true)) {
+                throw new RequestDoneException(this, getUrl());
+            }
             return observeFailure(execute(target, "Fetch.failRequest", args));
         }
 
@@ -318,7 +323,7 @@ public class NetworkInterceptor {
          */
         public CompletableFuture<Void> continueRequest(String url, String method,
                                                        String postData, Map<String, String> headers) {
-            if (done) {
+            if (done.get()) {
                 throw new RequestDoneException(this, getUrl());
             }
 
@@ -339,7 +344,9 @@ public class NetworkInterceptor {
                 args.put("headers", toHeaderEntries(guardedHeaders));
             }
 
-            done = true;
+            if (!done.compareAndSet(false, true)) {
+                throw new RequestDoneException(this, getUrl());
+            }
 
             return observeFailure(execute(target, "Fetch.continueRequest", args));
         }

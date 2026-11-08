@@ -205,27 +205,39 @@ public class ProfileManager {
         // Tentar encerrar graciosamente primeiro
         boolean destroyed = handle.destroy();
 
-        if (destroyed) {
-            try {
-                // Aguardar até 5 segundos pelo encerramento
-                handle.onExit().get(5, java.util.concurrent.TimeUnit.SECONDS);
-                JavaDriverlessLogger.info(logger, "Processo {} encerrado com sucesso", pid);
-                return true;
-            } catch (Exception e) {
-                // Se não encerrou graciosamente, forçar
-                JavaDriverlessLogger.warn(logger, "Forçando encerramento do processo {}", pid);
-                boolean forciblyDestroyed = handle.destroyForcibly();
+        // Interrupção é registrada e restaurada ao final: restaurar dentro do
+        // catch faria a segunda espera falhar na hora.
+        boolean interrompido = false;
 
-                if (forciblyDestroyed) {
-                    try {
-                        handle.onExit().get(3, java.util.concurrent.TimeUnit.SECONDS);
-                        JavaDriverlessLogger.warn(logger, "Processo {} encerrado forçadamente", pid);
-                        return true;
-                    } catch (Exception ex) {
-                        JavaDriverlessLogger.warn(logger, "Erro ao aguardar encerramento: {}", ex.getMessage());
+        try {
+            if (destroyed) {
+                try {
+                    // Aguardar até 5 segundos pelo encerramento
+                    handle.onExit().get(5, java.util.concurrent.TimeUnit.SECONDS);
+                    JavaDriverlessLogger.info(logger, "Processo {} encerrado com sucesso", pid);
+                    return true;
+                } catch (Exception e) {
+                    // O JDK pode manter o flag ao lançar; limpar para a segunda espera funcionar.
+                    interrompido |= Thread.interrupted() || e instanceof InterruptedException;
+                    // Se não encerrou graciosamente, forçar
+                    JavaDriverlessLogger.warn(logger, "Forçando encerramento do processo {}", pid);
+                    boolean forciblyDestroyed = handle.destroyForcibly();
+
+                    // destroyForcibly devolve false se o processo já saiu depois do SIGTERM.
+                    if (forciblyDestroyed || !handle.isAlive()) {
+                        try {
+                            handle.onExit().get(3, java.util.concurrent.TimeUnit.SECONDS);
+                            JavaDriverlessLogger.warn(logger, "Processo {} encerrado forçadamente", pid);
+                            return true;
+                        } catch (Exception ex) {
+                            interrompido |= ex instanceof InterruptedException;
+                            JavaDriverlessLogger.warn(logger, "Erro ao aguardar encerramento: {}", ex.getMessage());
+                        }
                     }
                 }
             }
+        } finally {
+            if (interrompido) Thread.currentThread().interrupt();
         }
 
         return false;

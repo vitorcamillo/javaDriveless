@@ -89,6 +89,7 @@ final class FingerprintMappingCatalog {
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
+            sites.clear();
             System.out.println("Catalog load failed, using fallback: " + e.getMessage());
         }
         if (!sites.isEmpty()) {

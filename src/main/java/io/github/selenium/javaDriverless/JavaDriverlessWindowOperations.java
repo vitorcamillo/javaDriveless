@@ -65,8 +65,9 @@ import java.util.concurrent.CompletableFuture;
 abstract class JavaDriverlessWindowOperations {
     protected Chrome chrome;
     protected long implicitWaitMillis = 0;
-    protected long scriptTimeoutMillis = 30000;
-    protected long pageLoadTimeoutMillis = 300000;
+    // 0 significa sem limite até o chamador configurar via setScriptTimeout/setPageLoadTimeout.
+    protected long scriptTimeoutMillis = 0;
+    protected long pageLoadTimeoutMillis = 0;
 
     /**
      * Retorna o tamanho da janela.

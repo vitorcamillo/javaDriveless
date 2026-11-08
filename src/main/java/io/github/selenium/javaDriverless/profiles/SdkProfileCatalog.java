@@ -14,7 +14,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -109,6 +111,7 @@ public class SdkProfileCatalog {
             view.put(existing.id, existing);
         }
         Set<String> fileNames = catalogFileNames();
+        Map<SdkProfile, List<StorageClaim>> claims = new IdentityHashMap<>();
         for (SdkProfile profile : profiles) {
             Objects.requireNonNull(profile, "profile");
             profile.id = normalizeId(profile.id);
@@ -120,7 +123,7 @@ public class SdkProfileCatalog {
                 throw new ProfileCatalogException(
                         "Profile '" + profile.id + "' colide por maiúsculas/minúsculas com outro ID");
             }
-            validateStorageOwnershipUnlocked(profile, new ArrayList<>(view.values()));
+            validateStorageOwnershipUnlocked(profile, view.values(), claims);
             writeProfileUnlocked(profile, view.get(profile.id));
             view.put(profile.id, profile);
             fileNames.add(fileName);
@@ -369,21 +372,36 @@ public class SdkProfileCatalog {
 
 
     private void validateStorageOwnershipUnlocked(SdkProfile candidate, List<SdkProfile> catalogProfiles) {
+        validateStorageOwnershipUnlocked(candidate, catalogProfiles, new IdentityHashMap<>());
+    }
+
+    /** {@code claims} evita repetir, no mesmo lote, a resolução em disco de um mesmo perfil. */
+    private void validateStorageOwnershipUnlocked(SdkProfile candidate,
+                                                  Collection<SdkProfile> catalogProfiles,
+                                                  Map<SdkProfile, List<StorageClaim>> claims) {
         List<StorageClaim> occupied = new ArrayList<>();
         for (SdkProfile existing : catalogProfiles) {
             if (candidate.id.equals(existing.id)) {
                 continue;
             }
-            addStorageClaim(occupied, existing.id, "userDataDir", existing.storage.userDataDir);
-            addStorageClaim(occupied, existing.id, "downloadsDir", existing.storage.downloadsDir);
+            occupied.addAll(claims.computeIfAbsent(existing, SdkProfileCatalog::storageClaims));
         }
         rejectStorageCollision(candidate, "userDataDir", candidate.storage.userDataDir, occupied);
         rejectStorageCollision(candidate, "downloadsDir", candidate.storage.downloadsDir, occupied);
     }
+
+    private static List<StorageClaim> storageClaims(SdkProfile profile) {
+        List<StorageClaim> claims = new ArrayList<>(2);
+        addStorageClaim(claims, profile.id, "userDataDir", profile.storage.userDataDir);
+        addStorageClaim(claims, profile.id, "downloadsDir", profile.storage.downloadsDir);
+        return claims;
+    }
+
     void validateStorageBatchUnlocked(List<SdkProfile> candidates) {
         List<SdkProfile> virtualCatalog = new ArrayList<>(list());
+        Map<SdkProfile, List<StorageClaim>> claims = new IdentityHashMap<>();
         for (SdkProfile candidate : candidates) {
-            validateStorageOwnershipUnlocked(candidate, virtualCatalog);
+            validateStorageOwnershipUnlocked(candidate, virtualCatalog, claims);
             virtualCatalog.removeIf(existing -> candidate.id.equals(existing.id));
             virtualCatalog.add(candidate);
         }

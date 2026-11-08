@@ -18,6 +18,7 @@ fi
 # that otherwise default to $HOME/.local/share/pki/nssdb.
 database="$HOME/.pki/nssdb"
 install -d -m 0700 "$database"
+chmod 0700 "$database"
 if [[ ! -f "$database/cert9.db" ]]; then
   certutil -N --empty-password -d "sql:$database" >/dev/null
 fi

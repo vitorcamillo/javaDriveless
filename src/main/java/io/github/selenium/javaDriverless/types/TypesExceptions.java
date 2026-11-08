@@ -27,19 +27,41 @@ public class TypesExceptions {
          * @param exceptionDetails detalhes da exceção retornados pelo CDP
          */
         public JSEvalException(JsonNode exceptionDetails) {
-            super(exceptionDetails.get("exception").get("description").asText());
-            
-            this.excId = exceptionDetails.get("exceptionId").asInt();
-            this.text = exceptionDetails.get("text").asText();
-            this.lineNumber = exceptionDetails.get("lineNumber").asInt();
-            this.columnNumber = exceptionDetails.get("columnNumber").asInt();
-            
-            JsonNode exception = exceptionDetails.get("exception");
-            this.type = exception.get("type").asText();
-            this.subtype = exception.has("subtype") ? exception.get("subtype").asText() : null;
-            this.className = exception.get("className").asText();
-            this.description = exception.get("description").asText();
-            this.objId = exception.get("objectId").asText();
+            super(mensagem(exceptionDetails));
+
+            this.excId = exceptionDetails.path("exceptionId").asInt();
+            this.text = exceptionDetails.path("text").asText("");
+            this.lineNumber = exceptionDetails.path("lineNumber").asInt();
+            this.columnNumber = exceptionDetails.path("columnNumber").asInt();
+
+            JsonNode exception = exceptionDetails.path("exception");
+            this.type = exception.path("type").asText("");
+            this.subtype = exception.path("subtype").asText(null);
+            this.className = exception.path("className").asText(null);
+            this.description = exception.path("description").asText(null);
+            this.objId = exception.path("objectId").asText(null);
+        }
+
+        /**
+         * Mensagem legível a partir dos detalhes da exceção CDP:
+         * exception.description, senão exception.value, senão text; "throw 'texto'"
+         * chega sem description/className/objectId e não deve gerar NPE.
+         */
+        private static String mensagem(JsonNode detalhes) {
+            JsonNode exception = detalhes.path("exception");
+            String description = exception.path("description").asText(null);
+            if (description != null) {
+                return description;
+            }
+            JsonNode value = exception.path("value");
+            if (!value.isMissingNode() && !value.isNull()) {
+                return value.asText();
+            }
+            String text = detalhes.path("text").asText(null);
+            if (text != null) {
+                return text;
+            }
+            return "Erro de JavaScript";
         }
         
         public int getExcId() {

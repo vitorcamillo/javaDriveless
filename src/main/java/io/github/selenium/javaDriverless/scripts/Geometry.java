@@ -327,8 +327,8 @@ public class Geometry {
     public static double[] getBounds(double[][] vertices) {
         double xMin = Double.MAX_VALUE;
         double yMin = Double.MAX_VALUE;
-        double xMax = Double.MIN_VALUE;
-        double yMax = Double.MIN_VALUE;
+        double xMax = Double.NEGATIVE_INFINITY;
+        double yMax = Double.NEGATIVE_INFINITY;
         
         for (double[] vertex : vertices) {
             xMin = Math.min(xMin, vertex[0]);
@@ -408,7 +408,7 @@ public class Geometry {
         
         // Gerar pontos ao longo do spline
         double distance = Math.sqrt(Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2));
-        int numPoints = (int) (distance * 10);
+        int numPoints = Math.max(2, (int) (distance * 10));
         
         List<int[]> path = new ArrayList<>();
         for (int i = 0; i < numPoints; i++) {

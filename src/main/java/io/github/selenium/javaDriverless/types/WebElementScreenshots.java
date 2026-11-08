@@ -25,7 +25,9 @@ final class WebElementScreenshots {
             JsonNode borderNode = modelNode.get("border");
 
             double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE;
-            double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE;
+            // NEGATIVE_INFINITY: Double.MIN_VALUE é o menor positivo e nunca daria maxX/maxY corretos
+            // para coordenadas negativas.
+            double maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
 
             for (int i = 0; i < borderNode.size(); i += 2) {
                 double x = borderNode.get(i).asDouble();

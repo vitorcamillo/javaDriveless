@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Wrapper simplificado do Chrome com gerenciamento automático de profiles.
@@ -75,7 +76,7 @@ abstract class JavaDriverlessNavigationOperations extends JavaDriverlessWindowOp
      */
     public JavaDriverless get(String url) {
         try {
-            chrome.get(url, true).get();
+            aguardar(chrome.get(url, true), pageLoadTimeoutMillis);
             return (JavaDriverless) this;
         } catch (Exception e) {
             throw new RuntimeException("Erro ao navegar para: " + url, e);
@@ -169,7 +170,7 @@ abstract class JavaDriverlessNavigationOperations extends JavaDriverlessWindowOp
      */
     public WebElement findElement(String by, String value) {
         try {
-            return chrome.findElement(by, value, 10.0f).get();
+            return chrome.findElement(by, value, findTimeoutSeconds()).get();
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar elemento: " + by + "=" + value, e);
         }
@@ -194,7 +195,7 @@ abstract class JavaDriverlessNavigationOperations extends JavaDriverlessWindowOp
      */
     public List<WebElement> findElements(String by, String value) {
         try {
-            return chrome.findElements(by, value, 10.0f).get();
+            return chrome.findElements(by, value, findTimeoutSeconds()).get();
         } catch (Exception e) {
             throw new RuntimeException("Erro ao buscar elementos: " + by + "=" + value, e);
         }
@@ -208,7 +209,7 @@ abstract class JavaDriverlessNavigationOperations extends JavaDriverlessWindowOp
      */
     public Object executeScript(String script) {
         try {
-            return chrome.executeScript(script, null, true).get();
+            return aguardar(chrome.executeScript(script, null, true), scriptTimeoutMillis);
         } catch (Exception e) {
             throw new RuntimeException("Erro ao executar script", e);
         }
@@ -409,6 +410,22 @@ abstract class JavaDriverlessNavigationOperations extends JavaDriverlessWindowOp
      */
     public io.github.selenium.javaDriverless.input.Pointer getPointer() {
         return chrome.getCurrentPointer();
+    }
+
+    /**
+     * Timeout efetivo (em segundos) para buscas: implicit wait configurado ou o
+     * padrão de 10 s quando nada foi configurado.
+     */
+    private float findTimeoutSeconds() {
+        return implicitWaitMillis > 0 ? implicitWaitMillis / 1000f : 10.0f;
+    }
+
+    /**
+     * Aguarda um future respeitando o timeout em milissegundos;
+     * {@code 0} significa esperar sem limite.
+     */
+    private static <T> T aguardar(CompletableFuture<T> future, long timeoutMillis) throws Exception {
+        return timeoutMillis > 0 ? future.get(timeoutMillis, TimeUnit.MILLISECONDS) : future.get();
     }
 
 }

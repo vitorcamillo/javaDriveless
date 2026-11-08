@@ -124,9 +124,12 @@ final class BrowserFingerprintDefaults {
         try {
             Path cpuInfo = Path.of("/proc/cpuinfo");
             if (Files.isRegularFile(cpuInfo)) {
-                long processors = Files.lines(cpuInfo)
-                        .filter(line -> line.startsWith("processor"))
-                        .count();
+                long processors;
+                try (java.util.stream.Stream<String> lines = Files.lines(cpuInfo)) {
+                    processors = lines
+                            .filter(line -> line.startsWith("processor"))
+                            .count();
+                }
                 if (processors > 0 && processors <= Integer.MAX_VALUE) {
                     cpus = (int) processors;
                 }
@@ -142,10 +145,13 @@ final class BrowserFingerprintDefaults {
         try {
             Path memInfo = Path.of("/proc/meminfo");
             if (Files.isRegularFile(memInfo)) {
-                String line = Files.lines(memInfo)
-                        .filter(value -> value.startsWith("MemTotal:"))
-                        .findFirst()
-                        .orElse("");
+                String line;
+                try (java.util.stream.Stream<String> lines = Files.lines(memInfo)) {
+                    line = lines
+                            .filter(value -> value.startsWith("MemTotal:"))
+                            .findFirst()
+                            .orElse("");
+                }
                 String digits = line.replaceAll("\\D+", "");
                 if (!digits.isBlank()) {
                     bytes = Long.parseLong(digits) * 1024L;

@@ -75,6 +75,7 @@ final class SeleniumProxyScreenSurfaceScripts {
           if (root?.querySelectorAll) frames.push(...root.querySelectorAll('iframe'));
           for (const frame of frames) {
             if (trackedFrames.has(frame)) continue;
+            if (trackedFrames.size >= 64) { for (const old of trackedFrames) { if (!old.isConnected) trackedFrames.delete(old); } }
             trackedFrames.add(frame);
             try {
               if (installedScreenWorkArea) patchScreenScope(frame.contentWindow, false);

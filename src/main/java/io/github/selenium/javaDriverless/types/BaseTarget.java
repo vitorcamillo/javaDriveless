@@ -11,6 +11,7 @@ import io.github.selenium.javaDriverless.cdp.pipe.CdpPipeRegistry;
 
 import io.github.selenium.javaDriverless.cdp.DevToolsHttp;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -56,7 +57,8 @@ public class BaseTarget implements CDPCommandExecutor {
         this.id = "BaseTarget";
         this.timeout = timeout;
         this.maxWsSize = maxWsSize;
-        this.downloadsPaths = new HashMap<>();
+        // Chave pode ser nula (contextId null) e ConcurrentHashMap não aceita: usar wrapper sincronizado.
+        this.downloadsPaths = Collections.synchronizedMap(new HashMap<>());
     }
     
     /**

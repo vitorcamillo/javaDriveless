@@ -99,7 +99,10 @@ public class Alert {
         return CompletableFuture.supplyAsync(() -> {
             // Verificar se já há um alert detectado
             if (target.getSocket() != null) {
-                // O alert já foi detectado via listener
+                // O alert já foi detectado via listener: reusar os dados capturados
+                if (target.alert instanceof JsonNode dados) {
+                    alertData = dados;
+                }
                 started = true;
                 return this;
             }

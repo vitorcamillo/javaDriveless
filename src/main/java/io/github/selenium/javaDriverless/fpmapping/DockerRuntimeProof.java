@@ -132,7 +132,11 @@ public class DockerRuntimeProof {
             report.put("status", "FAIL");
             report.put("error", e.toString());
             report.put("finishedAt", Instant.now().toString());
-            write(outputPath, report);
+            try {
+                write(outputPath, report);
+            } catch (Exception writeError) {
+                e.addSuppressed(writeError);
+            }
             throw e;
         } finally {
             if (driver != null) {
