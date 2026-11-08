@@ -3,10 +3,18 @@ package io.github.selenium.javaDriverless.profiles;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -79,6 +87,129 @@ class SdkProfileCatalogLockTest {
             assertThatThrownBy(() -> method.invoke(null, path)).hasCause(failure);
             org.mockito.Mockito.verify(channel).close();
         }
+    }
+
+    /** Thread segura with(...) enquanto outra chama com timeout curto: estouro < 5 s. */
+    @Test
+    void outraThreadSegurandoCausaTimeoutRapido(@TempDir Path root) throws Exception {
+        CountDownLatch holderDentro = new CountDownLatch(1);
+        CountDownLatch liberar = new CountDownLatch(1);
+        AtomicBoolean holderConcluido = new AtomicBoolean(false);
+        Thread holder = new Thread(() -> {
+            SdkProfileCatalogLock.with(root, () -> {
+                holderDentro.countDown();
+                try {
+                    liberar.await(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return "holder";
+            });
+            holderConcluido.set(true);
+        });
+        holder.start();
+        assertThat(holderDentro.await(5, TimeUnit.SECONDS)).isTrue();
+
+        long inicio = System.nanoTime();
+        assertThatThrownBy(() -> SdkProfileCatalogLock.with(root, Duration.ofMillis(100), () -> "nunca"))
+                .isInstanceOf(ProfileCatalogException.class)
+                .hasMessageContaining("Timed out");
+        assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - inicio)).isLessThan(5000);
+
+        liberar.countDown();
+        holder.join(10000);
+        assertThat(holderConcluido).isTrue();
+        // Após liberar, nova chamada funciona.
+        assertThat(SdkProfileCatalogLock.with(root, Duration.ofSeconds(5), () -> "depois"))
+                .isEqualTo("depois");
+    }
+
+    /** FileChannel.lock() externo no .catalog.lock (mesma JVM) também produz timeout. */
+    @Test
+    void fileLockExternoCausaTimeout(@TempDir Path root) throws Exception {
+        SdkProfileCatalogLock.with(root, () -> "cria");
+        Path lockPath = root.resolve(".catalog.lock");
+        try (FileChannel canal = FileChannel.open(lockPath, StandardOpenOption.WRITE);
+             FileLock externo = canal.lock()) {
+            long inicio = System.nanoTime();
+            assertThatThrownBy(() -> SdkProfileCatalogLock.with(root, Duration.ofMillis(200), () -> "nunca"))
+                    .isInstanceOf(ProfileCatalogException.class)
+                    .hasMessageContaining("Timed out");
+            assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - inicio)).isLessThan(5000);
+        }
+    }
+
+    /** Thread interrompida recebe "Interrupted" e mantém o flag de interrupção. */
+    @Test
+    void interrupcaoLancaInterruptedEMantemFlag(@TempDir Path root) throws Exception {
+        CountDownLatch holderDentro = new CountDownLatch(1);
+        CountDownLatch liberar = new CountDownLatch(1);
+        Thread holder = new Thread(() -> SdkProfileCatalogLock.with(root, () -> {
+            holderDentro.countDown();
+            try {
+                liberar.await(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return "holder";
+        }));
+        holder.start();
+        assertThat(holderDentro.await(5, TimeUnit.SECONDS)).isTrue();
+
+        AtomicReference<Throwable> falha = new AtomicReference<>();
+        AtomicBoolean flagMantido = new AtomicBoolean(false);
+        Thread esperando = new Thread(() -> {
+            Thread.currentThread().interrupt();
+            try {
+                SdkProfileCatalogLock.with(root, Duration.ofSeconds(5), () -> "nunca");
+            } catch (Throwable t) {
+                falha.set(t);
+            }
+            flagMantido.set(Thread.currentThread().isInterrupted());
+        });
+        esperando.start();
+        esperando.join(10000);
+
+        assertThat(falha.get()).isInstanceOf(ProfileCatalogException.class)
+                .hasMessageContaining("Interrupted");
+        assertThat(flagMantido).isTrue();
+
+        liberar.countDown();
+        holder.join(10000);
+    }
+
+    /** Liberação pelo holder restaura o acesso para novas chamadas. */
+    @Test
+    void novaChamadaFuncionaAposLiberacao(@TempDir Path root) throws Exception {
+        CountDownLatch holderDentro = new CountDownLatch(1);
+        CountDownLatch liberar = new CountDownLatch(1);
+        Thread holder = new Thread(() -> SdkProfileCatalogLock.with(root, () -> {
+            holderDentro.countDown();
+            try {
+                liberar.await(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return "holder";
+        }));
+        holder.start();
+        assertThat(holderDentro.await(5, TimeUnit.SECONDS)).isTrue();
+
+        assertThatThrownBy(() -> SdkProfileCatalogLock.with(root, Duration.ofMillis(50), () -> "nunca"))
+                .hasMessageContaining("Timed out");
+
+        liberar.countDown();
+        holder.join(10000);
+        assertThat(SdkProfileCatalogLock.with(root, Duration.ofSeconds(5), () -> "depois"))
+                .isEqualTo("depois");
+    }
+
+    /** Chamada aninhada (mesma thread) é reentrante mesmo com timeout mínimo. */
+    @Test
+    void chamadaAninhadaContinuaReentrante(@TempDir Path root) {
+        String resultado = SdkProfileCatalogLock.with(root, () ->
+                SdkProfileCatalogLock.with(root, Duration.ofMillis(1), () -> "aninhado"));
+        assertThat(resultado).isEqualTo("aninhado");
     }
 
 }

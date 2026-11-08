@@ -228,23 +228,43 @@ final class FingerprintMappingExpectations {
         return Double.parseDouble(matcher.group());
     }
 
-    private static Set<String> canonicalIpSet(String value) {
+    static Set<String> canonicalIpSet(String value) {
         Set<String> addresses = new LinkedHashSet<>();
         String candidates = (value == null ? "" : value)
                 .replace('[', ' ').replace(']', ' ')
                 .replace(',', ' ').replace(';', ' ');
         for (String candidate : candidates.split("\\s+")) {
             String literal = candidate.trim();
-            if ((!literal.contains(".") && !literal.contains(":"))
-                    || !literal.matches("[0-9A-Fa-f:.]+")) {
+            if (!isDnsSafeIpLiteral(literal)) {
                 continue;
             }
             try {
                 addresses.add(java.net.InetAddress.getByName(literal).getHostAddress());
             } catch (java.net.UnknownHostException ignored) {
-                // Malformed literals never match the measured allowlist.
+                // Literal inválido nunca entra na allowlist medida.
             }
         }
         return addresses;
+    }
+
+    /**
+     * Só aceita literais que o Java resolve sem DNS: IPv6 (contém ':' e apenas hex/:/.)
+     * ou IPv4 com exatamente 4 octetos decimais de 1 a 3 dígitos, cada um <= 255.
+     * Nomes e octetos inválidos são ignorados antes de chamar InetAddress.
+     */
+    private static boolean isDnsSafeIpLiteral(String literal) {
+        if (literal.contains(":")) {
+            // Com ':' o Java trata como IPv6 literal; filtra charset para evitar lookup residual.
+            return literal.matches("[0-9A-Fa-f:.]+");
+        }
+        if (!literal.matches("[0-9]{1,3}(\\.[0-9]{1,3}){3}")) {
+            return false;
+        }
+        for (String octet : literal.split("\\.")) {
+            if (Integer.parseInt(octet) > 255) {
+                return false;
+            }
+        }
+        return true;
     }
 }

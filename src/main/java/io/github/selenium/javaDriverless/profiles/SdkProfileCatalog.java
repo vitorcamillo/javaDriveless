@@ -99,12 +99,49 @@ public class SdkProfileCatalog {
     }
     SdkProfile saveUnlocked(SdkProfile profile) {
         Objects.requireNonNull(profile, "profile");
-        profile.id = normalizeId(profile.id);
-        profile.name = requireName(profile.name);
-        profile.applyDefaults();
-        rejectCaseFoldAlias(profile.id);
-        validateStorageOwnershipUnlocked(profile, list());
-        SdkProfile persisted = loadUnlocked(profile.id).orElse(null);
+        return saveAllUnlocked(List.of(profile)).get(0);
+    }
+
+    /** Lista o catálogo uma única vez: lote de N perfis não reparseia N vezes. */
+    List<SdkProfile> saveAllUnlocked(List<SdkProfile> profiles) {
+        Map<String, SdkProfile> view = new LinkedHashMap<>();
+        for (SdkProfile existing : list()) {
+            view.put(existing.id, existing);
+        }
+        Set<String> fileNames = catalogFileNames();
+        for (SdkProfile profile : profiles) {
+            Objects.requireNonNull(profile, "profile");
+            profile.id = normalizeId(profile.id);
+            profile.name = requireName(profile.name);
+            profile.applyDefaults();
+            String fileName = profile.id + ".json";
+            if (fileNames.stream().anyMatch(
+                    name -> name.equalsIgnoreCase(fileName) && !name.equals(fileName))) {
+                throw new ProfileCatalogException(
+                        "Profile '" + profile.id + "' colide por maiúsculas/minúsculas com outro ID");
+            }
+            validateStorageOwnershipUnlocked(profile, new ArrayList<>(view.values()));
+            writeProfileUnlocked(profile, view.get(profile.id));
+            view.put(profile.id, profile);
+            fileNames.add(fileName);
+        }
+        return profiles;
+    }
+
+    private Set<String> catalogFileNames() {
+        Set<String> names = new HashSet<>();
+        if (!Files.isDirectory(root)) {
+            return names;
+        }
+        try (var entries = Files.list(root)) {
+            entries.map(path -> path.getFileName().toString()).forEach(names::add);
+            return names;
+        } catch (IOException e) {
+            throw new ProfileCatalogException("Failed to list profiles in " + root, e);
+        }
+    }
+
+    private void writeProfileUnlocked(SdkProfile profile, SdkProfile persisted) {
         try (ProfileStorageLeaseManager.Lease ignored = ProfileStorageLeaseManager.acquire(
                 leaseDirectories(profile.id, persisted, profile))) {
             Files.createDirectories(root);
@@ -117,7 +154,6 @@ public class SdkProfileCatalog {
                 Files.deleteIfExists(temp);
                 throw e;
             }
-            return profile;
         } catch (IOException e) {
             throw new ProfileCatalogException("Failed to save profile '" + profile.id + "'", e);
         }
@@ -294,6 +330,12 @@ public class SdkProfileCatalog {
             throw new ProfileCatalogException("Failed to read profile " + path, e);
         }
     }
+    SdkProfile parseProfile(byte[] json) throws IOException {
+        SdkProfile profile = OBJECT_MAPPER.readValue(json, SdkProfile.class);
+        profile.id = normalizeId(profile.id);
+        profile.name = requireName(profile.name);
+        return profile.applyDefaults();
+    }
     void writeJson(Path destination, SdkProfile profile) {
         writeJson(destination, (Object) profile);
     }
@@ -304,12 +346,15 @@ public class SdkProfileCatalog {
                 Files.createDirectories(parent);
             }
             String json = OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(value);
-            if (json.contains("\"username\"") || json.contains("\"password\"")) {
-                throw new ProfileCatalogException("Profile exports must not contain proxy credentials");
-            }
+            rejectProxyCredentials(json);
             OwnerOnlyFiles.writeString(destination, json);
         } catch (IOException e) {
             throw new ProfileCatalogException("Failed to write profile JSON " + destination, e);
+        }
+    }
+    void rejectProxyCredentials(String json) {
+        if (json.contains("\"username\"") || json.contains("\"password\"")) {
+            throw new ProfileCatalogException("Profile exports must not contain proxy credentials");
         }
     }
     SdkProfile deepCopy(SdkProfile profile) {

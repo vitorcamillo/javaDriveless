@@ -108,16 +108,31 @@ public class SwitchTo {
      * @return CompletableFuture com o Target
      */
     public CompletableFuture<Target> defaultContent(boolean activate) {
-        // Retornar ao target base
+        // Retornar ao target base; o contexto pode expor Target cru (Context) ou
+        // CompletableFuture<Target> (ChromeTargetActions)
         try {
             var getCurrentTargetMethod = context.getClass().getMethod("getCurrentTarget");
-            @SuppressWarnings("unchecked")
-            CompletableFuture<Target> currentTargetFuture =
-                (CompletableFuture<Target>) getCurrentTargetMethod.invoke(context);
+            Object result = getCurrentTargetMethod.invoke(context);
 
+            CompletableFuture<Target> currentTargetFuture;
+            if (result instanceof CompletableFuture) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<Target> future = (CompletableFuture<Target>) result;
+                currentTargetFuture = future;
+            } else if (result instanceof Target) {
+                currentTargetFuture = CompletableFuture.completedFuture((Target) result);
+            } else {
+                // null ou tipo inesperado: falha explícita em vez de ClassCastException
+                return CompletableFuture.failedFuture(new IllegalStateException(
+                    "getCurrentTarget não expôs Target nem CompletableFuture: " + result));
+            }
+
+            // TODO: Implementar lógica de base_target quando Context estiver completo
             return currentTargetFuture.thenCompose(currentTarget -> {
-                // TODO: Implementar lógica de base_target quando Context estiver completo
-                return CompletableFuture.completedFuture(currentTarget);
+                CompletableFuture<Void> activateFuture = activate
+                    ? activateTarget(currentTarget)
+                    : CompletableFuture.completedFuture(null);
+                return activateFuture.thenApply(v -> currentTarget);
             });
         } catch (Exception e) {
             return CompletableFuture.failedFuture(

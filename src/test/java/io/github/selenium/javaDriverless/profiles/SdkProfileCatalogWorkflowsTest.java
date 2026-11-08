@@ -13,6 +13,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -399,5 +400,217 @@ class SdkProfileCatalogWorkflowsTest {
             assertThat(perfil.metadata.notes).isEqualTo("revisão em lote"));
         assertThat(catalog.load("lote-c")).hasValueSatisfying(perfil ->
             assertThat(perfil.metadata.notes).isEqualTo("revisão em lote"));
+    }
+
+    @Test
+    void purgeRecusaPerfilDeletedTrancadoEMantemArquivo() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir);
+        SdkProfile perfil = catalog.create("trancado-lixo", "Trancado Lixo");
+        perfil.metadata.status = "deleted";
+        perfil.metadata.locked = true;
+        catalog.save(perfil);
+
+        assertThatThrownBy(() -> catalog.purge("trancado-lixo"))
+            .isInstanceOf(ProfileCatalogException.class)
+            .hasMessageContaining("is locked");
+        assertThat(catalog.load("trancado-lixo")).isPresent();
+    }
+
+    @Test
+    void exportArchiveRecusaPerfilComUsernameEDestinoNaoECriado() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir);
+        SdkProfile perfil = catalog.create("com-credencial", "Com Credencial");
+        // A checagem é textual sobre o JSON exportado: qualquer chave "username"
+        // serializada no perfil dispara a recusa (save não valida, export sim).
+        perfil.metadata.seeds.put("username", 1L);
+        catalog.save(perfil);
+        Path destino = tempDir.resolve("arquivos").resolve("credencial.zip");
+
+        assertThatThrownBy(() -> catalog.exportArchive(destino))
+            .isInstanceOf(ProfileCatalogException.class)
+            .hasMessageContaining("must not contain proxy credentials");
+        assertThat(destino).doesNotExist();
+    }
+
+    @Test
+    void restoreSnapshotEImportProfileAcimaDoLimiteDeBytesSaoRejeitados() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir.resolve("catalogo"));
+        // Arquivo sparse de exatamente MAX_SNAPSHOT_BYTES + 1 bytes: ocupa quase
+        // nada em disco, mas cruza a barreira anti-OOM por 1 byte.
+        Path snapshot = tempDir.resolve("snapshot-limite.json");
+        try (RandomAccessFile raf = new RandomAccessFile(snapshot.toFile(), "rw")) {
+            raf.setLength(SdkProfileCatalogWorkflows.MAX_SNAPSHOT_BYTES + 1);
+        }
+
+        assertThatThrownBy(() -> catalog.restoreSnapshot(snapshot, true))
+            .isInstanceOf(ProfileCatalogException.class)
+            .hasMessageContaining("exceeds size limit");
+        assertThatThrownBy(() -> catalog.importProfile(snapshot))
+            .isInstanceOf(ProfileCatalogException.class)
+            .hasMessageContaining("exceeds size limit");
+    }
+
+    @Test
+    void trashEBulkPatchConcorrentesPreservamAmbasAsAlteracoes() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir);
+        for (int i = 0; i < 30; i++) {
+            String id = "corrida-" + i;
+            catalog.create(id, "Corrida " + i);
+
+            SdkProfileBulkPatchRequest request = new SdkProfileBulkPatchRequest();
+            request.selectors = List.of(id);
+            request.notes = "nota " + i;
+            request.dryRun = false;
+
+            CountDownLatch largada = new CountDownLatch(1);
+            AtomicReference<Throwable> failure = new AtomicReference<>();
+            Thread trasher = new Thread(() -> {
+                try {
+                    largada.await(5, TimeUnit.SECONDS);
+                    catalog.trash(id);
+                } catch (Throwable e) {
+                    failure.compareAndSet(null, e);
+                }
+            });
+            Thread patcher = new Thread(() -> {
+                try {
+                    largada.await(5, TimeUnit.SECONDS);
+                    catalog.bulkPatch(request);
+                } catch (Throwable e) {
+                    failure.compareAndSet(null, e);
+                }
+            });
+            trasher.start();
+            patcher.start();
+            largada.countDown();
+            trasher.join(30_000);
+            patcher.join(30_000);
+
+            assertThat(trasher.isAlive()).as("iteração " + i).isFalse();
+            assertThat(patcher.isAlive()).as("iteração " + i).isFalse();
+            assertThat(failure.get()).as("iteração " + i).isNull();
+            // Qualquer ordem preserva as duas alterações: trash e bulkPatch são
+            // seções críticas que partem sempre do estado já gravado no disco.
+            String notaEsperada = "nota " + i;
+            assertThat(catalog.load(id)).as("iteração " + i).hasValueSatisfying(perfil -> {
+                assertThat(perfil.metadata.status).isEqualTo("deleted");
+                assertThat(perfil.metadata.notes).isEqualTo(notaEsperada);
+            });
+        }
+    }
+
+    @Test
+    void restoreDevolvePerfilDaLixeiraAtivoESemDeletedAt() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir);
+        catalog.create("restauravel", "Restaurável");
+        catalog.trash("restauravel");
+        assertThat(catalog.load("restauravel")).hasValueSatisfying(perfil ->
+            assertThat(perfil.metadata.status).isEqualTo("deleted"));
+
+        SdkProfile restaurado = catalog.restore("restauravel");
+
+        assertThat(restaurado.metadata.status).isEqualTo("active");
+        assertThat(restaurado.metadata.deletedAt).isNull();
+        assertThat(catalog.load("restauravel")).hasValueSatisfying(perfil -> {
+            assertThat(perfil.metadata.status).isEqualTo("active");
+            assertThat(perfil.metadata.deletedAt).isNull();
+        });
+    }
+
+    @Test
+    void purgeRemovePerfilDaLixeiraECatalogFicaVazio() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir);
+        catalog.create("purgavel", "Purgável");
+        catalog.trash("purgavel");
+
+        assertThat(catalog.purge("purgavel")).isTrue();
+        assertThat(catalog.load("purgavel")).isEmpty();
+        assertThat(catalog.list()).isEmpty();
+    }
+
+    @Test
+    void restoreSnapshotComExatamenteLimiteDeBytesNaoLancaERetornaVazio() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir.resolve("catalogo"));
+        // "[" + espaços + "]": JSON válido de array vazio com tamanho exato do limite.
+        Path snapshot = tempDir.resolve("snapshot-no-limite.json");
+        Files.writeString(snapshot,
+            "[" + " ".repeat((int) SdkProfileCatalogWorkflows.MAX_SNAPSHOT_BYTES - 2) + "]");
+
+        List<SdkProfile> restaurados = catalog.restoreSnapshot(snapshot, true);
+
+        assertThat(restaurados).isEmpty();
+        assertThat(catalog.list()).isEmpty();
+    }
+
+    @Test
+    void snapshotRecusaPerfilComUsernameEDestinoNaoECriado() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir);
+        SdkProfile perfil = catalog.create("com-username", "Com Username");
+        // Mesma checagem textual do exportArchive: chave "username" no JSON serializado.
+        perfil.metadata.seeds.put("username", 1L);
+        catalog.save(perfil);
+        Path destino = tempDir.resolve("arquivos").resolve("snapshot-credencial.json");
+
+        assertThatThrownBy(() -> catalog.snapshot(destino))
+            .isInstanceOf(ProfileCatalogException.class)
+            .hasMessageContaining("must not contain proxy credentials");
+        assertThat(destino).doesNotExist();
+    }
+
+    @Test
+    void exportArchiveDeDoisPerfisSemCredenciaisVerificaComOsDoisIds() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir.resolve("origem"));
+        catalog.create("par-a", "Par A");
+        catalog.create("par-b", "Par B");
+        Path destino = tempDir.resolve("arquivos").resolve("par.zip");
+
+        catalog.exportArchive(destino);
+
+        SdkProfileArchiveReport relatorio = catalog.verifyArchive(destino);
+        assertThat(relatorio.valid).isTrue();
+        assertThat(relatorio.profileIds).containsExactlyInAnyOrder("par-a", "par-b");
+    }
+
+    @Test
+    void restoreSnapshotComIdsQueColidemPorCaixaLançaExceção() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir.resolve("catalogo"));
+        Path snapshot = tempDir.resolve("snapshot-colisao.json");
+        Files.writeString(snapshot, "["
+            + "{\"id\":\"Alias-X\",\"name\":\"Alias X\","
+            + "\"storage\":{\"userDataDir\":\"" + tempDir.resolve("storage-a").toString()
+            + "\",\"downloadsDir\":\"" + tempDir.resolve("downloads-a").toString() + "\"}},"
+            + "{\"id\":\"alias-x\",\"name\":\"alias x\","
+            + "\"storage\":{\"userDataDir\":\"" + tempDir.resolve("storage-b").toString()
+            + "\",\"downloadsDir\":\"" + tempDir.resolve("downloads-b").toString() + "\"}}]");
+
+        assertThatThrownBy(() -> catalog.restoreSnapshot(snapshot, false))
+            .isInstanceOf(ProfileCatalogException.class)
+            .hasMessageContaining("colide");
+    }
+
+    @Test
+    void saveComIdQueColidePorCaixaComArquivoPreExistenteLançaExceção() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir);
+        catalog.save(new SdkProfile("Pre-X", "Pre X"));
+
+        assertThatThrownBy(() -> catalog.save(new SdkProfile("pre-x", "Pre Minúsculo")))
+            .isInstanceOf(ProfileCatalogException.class)
+            .hasMessageContaining("colide");
+    }
+
+    @Test
+    void restoreSnapshotComTresPerfisPersisteOsTres() throws Exception {
+        SdkProfileCatalog catalog = SdkProfileCatalog.at(tempDir.resolve("catalogo"));
+        Path snapshot = tempDir.resolve("snapshot-tres.json");
+        Files.writeString(snapshot, "["
+            + "{\"id\":\"rest-a\",\"name\":\"Rest A\"},"
+            + "{\"id\":\"rest-b\",\"name\":\"Rest B\"},"
+            + "{\"id\":\"rest-c\",\"name\":\"Rest C\"}]");
+
+        List<SdkProfile> restaurados = catalog.restoreSnapshot(snapshot, false);
+        assertThat(restaurados).extracting(perfil -> perfil.id)
+            .containsExactlyInAnyOrder("rest-a", "rest-b", "rest-c");
+        assertThat(catalog.list()).extracting(perfil -> perfil.id)
+            .containsExactlyInAnyOrder("rest-a", "rest-b", "rest-c");
     }
 }

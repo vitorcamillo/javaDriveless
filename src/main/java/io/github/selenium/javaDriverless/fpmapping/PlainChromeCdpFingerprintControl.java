@@ -1,8 +1,6 @@
 package io.github.selenium.javaDriverless.fpmapping;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.selenium.javaDriverless.DevToolsActivePortWaiter;
 import io.github.selenium.javaDriverless.FingerprintSitePermissionPolicy;
 import io.github.selenium.javaDriverless.types.BaseTarget;
@@ -16,7 +14,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +45,7 @@ public class PlainChromeCdpFingerprintControl extends PlainChromeCdpSupport {
 
         List<Map<String, String>> sites = FingerprintMappingCatalog.loadSites(parsed.catalog(), parsed.sites());
         Map<String, String> expectedProfile = FingerprintExpectedProfile.load(parsed);
-        JSON.writeValue(root.resolve("expected-profile.json").toFile(),
+        FingerprintMappingCaptureSupport.writeJson(root.resolve("expected-profile.json"),
                 FingerprintExpectedProfile.persistable(expectedProfile));
 
         Path userDataDir = Files.createTempDirectory("plain_chrome_cdp_");
@@ -57,6 +54,7 @@ public class PlainChromeCdpFingerprintControl extends PlainChromeCdpSupport {
         Target target = null;
         BaseTarget baseTarget = null;
         List<Map<String, Object>> manifest = new ArrayList<>();
+        Exception primaryFailure = null;
         try {
             // Porta 0: o Chrome binda a porta e a publica em DevToolsActivePort; pré-escolher deixava uma janela
             // para outro processo local ocupá-la.
@@ -74,6 +72,9 @@ public class PlainChromeCdpFingerprintControl extends PlainChromeCdpSupport {
                 manifest.add(captureSite(baseTarget, target, root, site, expectedProfile,
                         plainLocationProfile(parsed, site.get("id"))));
             }
+        } catch (Exception failure) {
+            primaryFailure = failure;
+            throw failure;
         } finally {
             if (target != null) {
                 try {
@@ -89,7 +90,14 @@ public class PlainChromeCdpFingerprintControl extends PlainChromeCdpSupport {
             }
             terminateProcessTree(chrome);
             deleteTree(userDataDir);
-            JSON.writeValue(root.resolve("MANIFEST.json").toFile(), manifest);
+            try {
+                FingerprintMappingCaptureSupport.writeJson(root.resolve("MANIFEST.json"), manifest);
+            } catch (Exception manifestFailure) {
+                // Falha do manifesto não mascara a exceção original; visível só quando ela não existe.
+                if (primaryFailure == null) {
+                    System.err.println("Falha ao gravar MANIFEST.json: " + manifestFailure);
+                }
+            }
             System.out.println("Artifacts: " + root.toAbsolutePath());
         }
     }
@@ -126,7 +134,8 @@ public class PlainChromeCdpFingerprintControl extends PlainChromeCdpSupport {
             Thread.sleep(postActionSettleMs(id, site));
             requireActionCompletion(target, id);
 
-            meta.put("finalUrl", evalString(target, "location.href"));
+            String finalUrl = evalString(target, "location.href");
+            meta.put("finalUrl", FingerprintMappingCaptureSupport.sanitizeArtifactUrl(finalUrl));
             meta.put("title", evalString(target, "document.title"));
             meta.put("navigator", evalJsonMap(target, FingerprintMappingScripts.NAVIGATOR_SCRIPT));
             meta.put("rawSignals", evalJsonMap(target, FingerprintMappingScripts.SIGNAL_SCRIPT));
@@ -137,13 +146,13 @@ public class PlainChromeCdpFingerprintControl extends PlainChromeCdpSupport {
             Map<String, Object> domEvidence = captureDomEvidence(id,
                     expression -> evalJsonMap(target, expression));
             meta.put("domEvidence", domEvidence);
-            Files.writeString(dir.resolve("page.html"), page, StandardCharsets.UTF_8);
-            Files.writeString(dir.resolve("body.txt"), body, StandardCharsets.UTF_8);
+            FingerprintMappingCaptureSupport.writeString(dir.resolve("page.html"), page);
+            FingerprintMappingCaptureSupport.writeString(dir.resolve("body.txt"), body);
 
             Map<String, Object> validation = FingerprintMappingValidation.validate(
                     id,
                     String.valueOf(meta.getOrDefault("title", "")),
-                    String.valueOf(meta.getOrDefault("finalUrl", "")),
+                    finalUrl,
                     body,
                     page,
                     site.getOrDefault("read", ""),
@@ -156,12 +165,12 @@ public class PlainChromeCdpFingerprintControl extends PlainChromeCdpSupport {
             meta.put("status", "pass".equals(validation.get("status")) ? "ok" : "validation-" + validation.get("status"));
         } catch (Exception e) {
             meta.put("status", "error");
-            meta.put("error", e.toString());
+            meta.put("error", FingerprintMappingCaptureSupport.sanitizeArtifactText(e.toString()));
         }
         meta.put("finishedAt", Instant.now().toString());
         try {
             Files.createDirectories(dir);
-            JSON.writeValue(dir.resolve("metadata.json").toFile(), meta);
+            FingerprintMappingCaptureSupport.writeJson(dir.resolve("metadata.json"), meta);
         } catch (Exception ignored) {
         }
         return meta;

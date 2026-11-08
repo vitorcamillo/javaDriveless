@@ -10,13 +10,10 @@ import io.github.selenium.javaDriverless.utils.OwnerOnlyFiles;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -78,6 +75,7 @@ public final class SdkProfileCatalogWorkflows {
             reserveCatalogStoragePath(
                     profile.id, "downloadsDir", profile.storage.downloadsDir, reservedStoragePaths);
         }
+        List<SdkProfile> clones = new ArrayList<>();
         for (int index = 1; index <= request.count; index++) {
             String nextId = SdkProfileCatalog.normalizeId(idPrefix + "-" + index);
             String nextName = namePrefix + " " + index;
@@ -109,9 +107,10 @@ public final class SdkProfileCatalogWorkflows {
                     applyDeterministicDiversity(clone, itemSeed);
                 }
                 isolateCloneState(clone, nextUserDataDir, nextDownloadsDir, noiseSeed);
-                catalog.saveUnlocked(clone);
+                clones.add(clone);
             }
         }
+        catalog.saveAllUnlocked(clones);
         return result;
     }
 
@@ -167,36 +166,46 @@ public final class SdkProfileCatalogWorkflows {
         // de validacao nao deixa nada gravado.
         if (!request.dryRun && !pendentes.isEmpty()) {
             catalog.validateStorageBatchUnlocked(pendentes);
-            pendentes.forEach(catalog::saveUnlocked);
+            catalog.saveAllUnlocked(pendentes);
         }
         return result;
     }
 
+    // Leitura, checagem e gravação na mesma seção crítica (mesmo motivo de bulkPatch).
     public SdkProfile trash(String selector) {
-        SdkProfile profile = catalog.select(selector);
-        if (profile.metadata.locked) {
-            throw new ProfileCatalogException("Profile '" + profile.id + "' is locked");
-        }
-        profile.metadata.status = "deleted";
-        profile.metadata.deletedAt = Instant.now().toString();
-        profile.metadata.updatedAt = profile.metadata.deletedAt;
-        return catalog.save(profile);
+        return SdkProfileCatalogLock.with(catalog.root, () -> {
+            SdkProfile profile = catalog.select(selector);
+            if (profile.metadata.locked) {
+                throw new ProfileCatalogException("Profile '" + profile.id + "' is locked");
+            }
+            profile.metadata.status = "deleted";
+            profile.metadata.deletedAt = Instant.now().toString();
+            profile.metadata.updatedAt = profile.metadata.deletedAt;
+            return catalog.saveUnlocked(profile);
+        });
     }
 
     public SdkProfile restore(String selector) {
-        SdkProfile profile = catalog.select(selector);
-        profile.metadata.status = "active";
-        profile.metadata.deletedAt = null;
-        profile.metadata.updatedAt = Instant.now().toString();
-        return catalog.save(profile);
+        return SdkProfileCatalogLock.with(catalog.root, () -> {
+            SdkProfile profile = catalog.select(selector);
+            profile.metadata.status = "active";
+            profile.metadata.deletedAt = null;
+            profile.metadata.updatedAt = Instant.now().toString();
+            return catalog.saveUnlocked(profile);
+        });
     }
 
     public boolean purge(String selector) {
-        SdkProfile profile = catalog.select(selector);
-        if (!"deleted".equalsIgnoreCase(profile.metadata.status)) {
-            throw new ProfileCatalogException("Profile '" + profile.id + "' is not in trash");
-        }
-        return catalog.delete(profile.id);
+        return SdkProfileCatalogLock.with(catalog.root, () -> {
+            SdkProfile profile = catalog.select(selector);
+            if (!"deleted".equalsIgnoreCase(profile.metadata.status)) {
+                throw new ProfileCatalogException("Profile '" + profile.id + "' is not in trash");
+            }
+            if (profile.metadata.locked) {
+                throw new ProfileCatalogException("Profile '" + profile.id + "' is locked");
+            }
+            return catalog.delete(profile.id);
+        });
     }
 
     public void snapshot(Path destination) {
@@ -207,15 +216,23 @@ public final class SdkProfileCatalogWorkflows {
         return restoreSnapshot(source, dryRun, ImportTrust.UNTRUSTED);
     }
 
-    public List<SdkProfile> restoreSnapshot(Path source, boolean dryRun, ImportTrust trust) {
-        Objects.requireNonNull(trust, "trust");
-        try {
-            // Barreira anti-OOM: rejeita arquivo grande antes de parsear.
-            if (Files.size(source) > MAX_SNAPSHOT_BYTES) {
+    /** Uma única abertura: sem janela entre medir o tamanho e parsear. */
+    private static byte[] readBounded(Path source) throws IOException {
+        try (InputStream input = Files.newInputStream(source)) {
+            byte[] bytes = input.readNBytes((int) MAX_SNAPSHOT_BYTES + 1);
+            if (bytes.length > MAX_SNAPSHOT_BYTES) {
                 throw new ProfileCatalogException("Profile snapshot " + source
                         + " exceeds size limit (" + MAX_SNAPSHOT_BYTES + " bytes)");
             }
-            SdkProfile[] profiles = SdkProfileCatalog.OBJECT_MAPPER.readValue(source.toFile(), SdkProfile[].class);
+            return bytes;
+        }
+    }
+
+    public List<SdkProfile> restoreSnapshot(Path source, boolean dryRun, ImportTrust trust) {
+        Objects.requireNonNull(trust, "trust");
+        try {
+            // Barreira anti-OOM: leitura limitada antes de parsear.
+            SdkProfile[] profiles = SdkProfileCatalog.OBJECT_MAPPER.readValue(readBounded(source), SdkProfile[].class);
             // Barreira anti-OOM: rejeita lote grande após parsear.
             if (profiles.length > MAX_SNAPSHOT_PROFILES) {
                 throw new ProfileCatalogException("Profile snapshot " + source
@@ -234,7 +251,7 @@ public final class SdkProfileCatalogWorkflows {
             SdkProfileCatalogLock.with(catalog.root, () -> {
                 catalog.validateStorageBatchUnlocked(restored);
                 if (!dryRun) {
-                    restored.forEach(catalog::saveUnlocked);
+                    catalog.saveAllUnlocked(restored);
                 }
                 return null;
             });
@@ -246,30 +263,36 @@ public final class SdkProfileCatalogWorkflows {
 
     public void exportArchive(Path destination) {
         try {
+            // Valida tudo antes de tocar no destino: falha não deixa zip parcial.
+            Map<String, byte[]> entries = new LinkedHashMap<>();
+            Map<String, String> manifest = new LinkedHashMap<>();
+            for (SdkProfile profile : catalog.list()) {
+                String id = SdkProfileCatalog.normalizeId(profile.id);
+                String entryName = "profiles/" + id + ".json";
+                String text = toJson(profile);
+                catalog.rejectProxyCredentials(text);
+                byte[] json = text.getBytes(StandardCharsets.UTF_8);
+                entries.put(entryName, json);
+                manifest.put(entryName, sha256(json));
+            }
             Path parent = destination.toAbsolutePath().normalize().getParent();
             if (parent != null) {
                 Files.createDirectories(parent);
             }
-            OwnerOnlyFiles.createOwnerOnly(destination);
-            try (OutputStream output = Files.newOutputStream(destination, StandardOpenOption.WRITE,
-                    StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS);
-                 ZipOutputStream zip = new ZipOutputStream(output, StandardCharsets.UTF_8)) {
-                Map<String, String> manifest = new LinkedHashMap<>();
-                for (SdkProfile profile : catalog.list()) {
-                    String id = SdkProfileCatalog.normalizeId(profile.id);
-                    String entryName = "profiles/" + id + ".json";
-                    byte[] json = toJson(profile).getBytes(StandardCharsets.UTF_8);
-                    manifest.put(entryName, sha256(json));
-                    zip.putNextEntry(new ZipEntry(entryName));
-                    zip.write(json);
+            OwnerOnlyFiles.writeAtomically(destination, output -> {
+                try (ZipOutputStream zip = new ZipOutputStream(output, StandardCharsets.UTF_8)) {
+                    for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
+                        zip.putNextEntry(new ZipEntry(entry.getKey()));
+                        zip.write(entry.getValue());
+                        zip.closeEntry();
+                    }
+                    zip.putNextEntry(new ZipEntry("manifest.sha256"));
+                    for (Map.Entry<String, String> entry : manifest.entrySet()) {
+                        zip.write((entry.getValue() + "  " + entry.getKey() + "\n").getBytes(StandardCharsets.UTF_8));
+                    }
                     zip.closeEntry();
                 }
-                zip.putNextEntry(new ZipEntry("manifest.sha256"));
-                for (Map.Entry<String, String> entry : manifest.entrySet()) {
-                    zip.write((entry.getValue() + "  " + entry.getKey() + "\n").getBytes(StandardCharsets.UTF_8));
-                }
-                zip.closeEntry();
-            }
+            });
         } catch (IOException e) {
             throw new ProfileCatalogException("Failed to export profile archive " + destination, e);
         }
@@ -379,7 +402,7 @@ public final class SdkProfileCatalogWorkflows {
         SdkProfileCatalogLock.with(catalog.root, () -> {
             catalog.validateStorageBatchUnlocked(imported);
             if (!dryRun) {
-                imported.forEach(catalog::saveUnlocked);
+                catalog.saveAllUnlocked(imported);
             }
             return null;
         });
@@ -399,7 +422,12 @@ public final class SdkProfileCatalogWorkflows {
 
     public SdkProfile importProfile(Path source, ImportTrust trust) {
         Objects.requireNonNull(trust, "trust");
-        SdkProfile profile = catalog.readProfile(source, false);
+        SdkProfile profile;
+        try {
+            profile = catalog.parseProfile(readBounded(source));
+        } catch (IOException e) {
+            throw new ProfileCatalogException("Failed to read profile " + source, e);
+        }
         if (trust == ImportTrust.UNTRUSTED) {
             stripLaunchSurface(profile);
         }

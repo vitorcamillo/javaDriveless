@@ -89,12 +89,45 @@ class SwitchToTest {
     }
 
     @Test
-    void defaultContentFailsWhenContextDoesNotExposeCompletableFutureTarget() {
-        // getCurrentTarget aqui devolve Target cru (não CompletableFuture) -> cast falha -> erro
-        SwitchTo switchTo = new SwitchTo(new FakeContext(targetWithDialogSupport()));
+    void defaultContentAcceptsPlainTarget() {
+        // getCurrentTarget aqui devolve Target cru (contrato do Context) -> devolve o target
+        Target target = targetWithDialogSupport();
+        SwitchTo switchTo = new SwitchTo(new FakeContext(target));
 
-        CompletableFuture<Target> future = switchTo.defaultContent(false);
-        assertThrows(Exception.class, () -> future.join());
+        assertEquals(target, switchTo.defaultContent(false).join());
+    }
+
+    @Test
+    void defaultContentActivatesTheTargetWhenRequested() {
+        Target target = targetWithDialogSupport();
+        when(target.getId()).thenReturn("t-1");
+        SwitchTo switchTo = new SwitchTo(new FakeContext(target));
+
+        assertEquals(target, switchTo.defaultContent(true).join());
+
+        verify(target).executeCdpCmd(eq("Target.activateTarget"), argThat(args ->
+            "t-1".equals(args.get("targetId"))), isNull());
+    }
+
+    @Test
+    void defaultContentWithoutActivateSendsNoCdpCommands() {
+        Target target = targetWithDialogSupport();
+        SwitchTo switchTo = new SwitchTo(new FakeContext(target));
+
+        assertEquals(target, switchTo.defaultContent(false).join());
+
+        verify(target, org.mockito.Mockito.never())
+            .executeCdpCmd(any(), anyMap(), any());
+    }
+
+    @Test
+    void defaultContentFailsWhenContextReturnsNullTarget() {
+        SwitchTo switchTo = new SwitchTo(new ContextWithNullTarget());
+
+        Exception thrown = assertThrows(Exception.class,
+            () -> switchTo.defaultContent(false).join());
+
+        assertInstanceOf(IllegalStateException.class, thrown.getCause());
     }
 
     @Test
@@ -187,11 +220,19 @@ class SwitchToTest {
         assertInstanceOf(UnsupportedOperationException.class, thrown.getCause());
     }
 
-    /** Contexto cujo getCurrentTarget devolve o CompletableFuture (contrato do Context real). */
+    /** Contexto cujo getCurrentTarget devolve o CompletableFuture (superfície de ChromeTargetActions). */
     static class FakeContextWithFutureTarget {
         @SuppressWarnings("unused")
         public CompletableFuture<Target> getCurrentTarget() {
             return CompletableFuture.completedFuture(targetWithDialogSupport());
+        }
+    }
+
+    /** Contexto cujo getCurrentTarget devolve null: defaultContent tem que falhar fechado. */
+    static class ContextWithNullTarget {
+        @SuppressWarnings("unused")
+        public Target getCurrentTarget() {
+            return null;
         }
     }
 
