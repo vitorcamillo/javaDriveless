@@ -26,10 +26,9 @@ mvn -B -ntp clean test
 mvn -B -ntp package
 ```
 
-O código-fonte usa `io.github.vitorcamillo:javadriveless:1.12.3`.
-A versão 1.12.3 corrige falhas síncronas no envio CDP, histórico de navegação sem resultado e fechamento/permissões do lock de perfil.
-Para usar uma dependência Maven local, execute `mvn install` neste repositório primeiro. Este
-repositório não promete que o artefato esteja disponível no Maven Central.
+Disponível no Maven Central como `io.github.vitorcamillo:javadriveless:1.12.5`.
+A 1.12.5 endurece o catálogo de perfis (lock com prazo, escrita owner-only atômica, limites
+anti-OOM) e corrige concorrência e timeouts da reauditoria, sobre as correções da 1.12.3.
 
 ## Início rápido
 
