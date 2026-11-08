@@ -232,20 +232,26 @@ abstract class TargetConnectionCore implements CDPCommandExecutor {
             conexao.connectAsync().join();
         }
 
-        pointer = new Pointer((Target) this);
+        try {
+            pointer = new Pointer((Target) this);
 
-        // Configurar listeners de eventos
-        conexao.addListener("Page.javascriptDialogOpening", params -> {
-            this.alert = params;
-        });
-        conexao.addListener("Page.javascriptDialogClosed", params -> {
-            this.alert = null;
-        });
-        conexao.addListener("Page.loadEventFired", params -> onLoaded());
-        conexao.addListener("Page.windowOpen", params -> onLoaded());
+            // Configurar listeners de eventos
+            conexao.addListener("Page.javascriptDialogOpening", params -> {
+                this.alert = params;
+            });
+            conexao.addListener("Page.javascriptDialogClosed", params -> {
+                this.alert = null;
+            });
+            conexao.addListener("Page.loadEventFired", params -> onLoaded());
+            conexao.addListener("Page.windowOpen", params -> onLoaded());
 
-        // Adicionar callbacks de fechamento
-        conexao.getOnClosed().addAll(onClosed);
+            // Adicionar callbacks de fechamento
+            conexao.getOnClosed().addAll(onClosed);
+        } catch (RuntimeException erro) {
+            // socket segue null: sem isso, close()/disconnect() não alcançam a conexão e ela vaza.
+            conexao.closeAsync().exceptionally(e -> null);
+            throw erro;
+        }
 
         // Publicar por último: init() concorrente só enxerga socket já pronto.
         socket = conexao;
