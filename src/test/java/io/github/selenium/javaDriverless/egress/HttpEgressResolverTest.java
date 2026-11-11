@@ -162,4 +162,30 @@ class HttpEgressResolverTest {
             server.stop(0);
         }
     }
+
+    @Test
+    void slowAndOversizedBodiesRespectTimeoutAndLimit() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        try {
+            server.createContext("/", exchange -> {
+                boolean big = exchange.getRequestURI().getPath().contains("big");
+                exchange.sendResponseHeaders(200, 0);
+                try (OutputStream out = exchange.getResponseBody()) {
+                    for (int i = 0; i < 400; i++, out.flush()) {
+                        out.write(new byte[big ? 4096 : 1]);
+                        if (!big) Thread.sleep(50);
+                    }
+                } catch (Exception ignored) { /* cliente encerrou */ }
+            });
+            server.start();
+            String base = "http://127.0.0.1:" + server.getAddress().getPort();
+            ProxyConfig proxy = new ProxyConfig("1.2.3.4", 8080, ProxyType.HTTP);
+            var slow = new HttpEgressResolver(base + "/slow/%s", Duration.ofMillis(800), false);
+            assertNull(org.junit.jupiter.api.Assertions.assertTimeout(Duration.ofSeconds(5), () -> slow.resolve(proxy)));
+            var big = new HttpEgressResolver(base + "/big/%s", Duration.ofSeconds(3), false);
+            org.junit.jupiter.api.Assertions.assertThrows(java.io.IOException.class, () -> big.resolve(proxy));
+        } finally {
+            server.stop(0);
+        }
+    }
 }

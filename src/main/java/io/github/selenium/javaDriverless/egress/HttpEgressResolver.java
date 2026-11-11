@@ -134,11 +134,28 @@ public final class HttpEgressResolver implements EgressResolver {
                 .header("User-Agent", "Mozilla/5.0")
                 .GET()
                 .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() / 100 != 2) {
-            return null;
+        HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        try (InputStream body = response.body()) {
+            if (response.statusCode() / 100 != 2) {
+                return null;
+            }
+            // O timeout do HttpClient só cobre os cabeçalhos: o corpo ganha prazo e teto próprios.
+            var expired = new java.util.concurrent.atomic.AtomicBoolean();
+            var closer = TIMEOUTS.schedule(() -> {
+                expired.set(true);
+                try { body.close(); } catch (IOException ignored) { }
+            }, timeout.toMillis(), TimeUnit.MILLISECONDS);
+            try {
+                byte[] bytes = body.readNBytes(256 * 1024 + 1);
+                ensureBodyLimit(0, bytes.length);
+                return expired.get() ? null : parseResponse(new String(bytes, StandardCharsets.UTF_8), mapper);
+            } catch (IOException e) {
+                if (expired.get()) return null;
+                throw e;
+            } finally {
+                closer.cancel(false);
+            }
         }
-        return parseResponse(response.body(), mapper);
     }
 
     String fetchViaAuthenticatedTunnel(URI uri, ProxyConfig proxy) throws IOException {
