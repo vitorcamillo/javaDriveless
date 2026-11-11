@@ -176,6 +176,7 @@ final class ChromeStartupResourceCleaner {
         }
         try {
             ProfileStartupFiles.deleteDirectory(ownedTempDir);
+            ManagedTempProfiles.release(ownedTempDir);
         } catch (Exception e) {
             JavaDriverlessLogger.warn(logger,
                     "Erro ao remover diretório temporário após falha de startup {}: {}",

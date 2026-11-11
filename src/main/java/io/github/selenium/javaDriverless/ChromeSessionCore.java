@@ -151,7 +151,7 @@ abstract class ChromeSessionCore extends ChromeSessionState implements AutoClose
                     // Somente o launch local possui e pode preparar profile, prefs e argumentos.
                     // Attach conecta a um Chrome do chamador e nunca deve mutar seu user-data-dir.
                     if (options.getUserDataDir() == null) {
-                        tempDir = Files.createTempDirectory("selenium_driverless_");
+                        tempDir = ManagedTempProfiles.create();
                         options.setManagedLaunchUserDataDir(tempDir.toString());
                     }
                     if (!ProfileStartupFiles.unlockStaleLocks(Paths.get(options.getUserDataDir()))) {
@@ -295,6 +295,7 @@ abstract class ChromeSessionCore extends ChromeSessionState implements AutoClose
                     }
                     process = pb.start();
                     browserPid = (int) process.pid();
+                    ManagedTempProfiles.attachProcess(tempDir, process.toHandle());
                     if (authenticatedProxyBridge != null) {
                         authenticatedProxyBridge.bindOwner(browserPid.longValue());
                     }

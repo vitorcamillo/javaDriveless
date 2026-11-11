@@ -273,6 +273,7 @@ abstract class ChromeTargetActions extends ChromeSessionCore {
         if (tempDir != null && java.nio.file.Files.exists(tempDir)) {
             try {
                 ProfileStartupFiles.deleteDirectory(tempDir);
+                ManagedTempProfiles.release(tempDir);
             } catch (Exception e) {
                 // Ignorar erros
             }
