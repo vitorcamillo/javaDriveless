@@ -363,13 +363,9 @@ public class Keyboard {
      * Delay helper
      */
     private CompletableFuture<Void> delay(int milliseconds) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                Thread.sleep(milliseconds);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+        // delayedExecutor: a espera não ocupa thread do ForkJoinPool comum.
+        return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(
+                milliseconds, java.util.concurrent.TimeUnit.MILLISECONDS));
     }
 
     /**

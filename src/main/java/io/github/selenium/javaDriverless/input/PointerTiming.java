@@ -8,7 +8,9 @@ final class PointerTiming {
     }
 
     static CompletableFuture<Void> sleepSeconds(double seconds) {
-        return CompletableFuture.runAsync(() -> sleepMillis((long) (seconds * 1000)));
+        // delayedExecutor: a espera não ocupa thread do ForkJoinPool comum.
+        return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(
+                (long) (seconds * 1000), java.util.concurrent.TimeUnit.MILLISECONDS));
     }
 
     static void sleepMillis(long millis) {

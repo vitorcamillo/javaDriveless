@@ -388,13 +388,9 @@ public class Context implements AutoCloseable {
      * @return CompletableFuture que completa após o tempo
      */
     public CompletableFuture<Void> sleep(double seconds) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                Thread.sleep((long) (seconds * 1000));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+        // delayedExecutor: a espera não ocupa thread do ForkJoinPool comum.
+        return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(
+                (long) (seconds * 1000), java.util.concurrent.TimeUnit.MILLISECONDS));
     }
     
     /**
