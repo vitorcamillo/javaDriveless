@@ -74,4 +74,18 @@ class SafeDiagnosticsTest {
                 .contains("<jwt>");
         assertThat(SafeDiagnostics.sanitizeMessage("bypass=1")).isEqualTo("bypass=1");
     }
+
+    @Test
+    void sanitizeMessageRedactsJsonValuesAuthSchemesAndUserinfo() {
+        // Regressão: valores JSON entre aspas, "Basic <b64>" e user:senha@host vazavam.
+        assertThat(SafeDiagnostics.sanitizeMessage("{\"password\": \"s3cr3tVALUE\"}"))
+                .doesNotContain("VALUE");
+        assertThat(SafeDiagnostics.sanitizeMessage("{\"token\":\"tokVALUE123\"}")).doesNotContain("VALUE");
+        assertThat(SafeDiagnostics.sanitizeMessage("Proxy-Authorization: Basic dXNlcjpwYXNzVkFMVUU="))
+                .doesNotContain("dXNlcjpwYXNzVkFMVUU");
+        assertThat(SafeDiagnostics.sanitizeMessage("proxy falhou: alice:hunter2VALUE@proxy.example.com:8080"))
+                .doesNotContain("hunter2VALUE", "alice")
+                .contains("proxy.example.com");
+        assertThat(SafeDiagnostics.sanitizeMessage("erro em 10:30 no host")).isEqualTo("erro em 10:30 no host");
+    }
 }

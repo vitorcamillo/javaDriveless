@@ -29,11 +29,17 @@ public final class SafeDiagnostics {
         String sanitized = message
                 .replaceAll("(?i)(?:https?|wss?|file)://\\S+", "<url>")
                 .replaceAll("(?i)bearer\\s+[^\\s|,;]+", "Bearer <redacted>")
+                // Userinfo sem esquema (user:senha@host): URLs com esquema já viraram <url>.
+                .replaceAll("(?<![\\w.-])[^\\s:/@\"'<>]+:[^\\s/@\"'<>]+@(?=[A-Za-z0-9\\[])", "<redacted>@")
+                // Chave opcionalmente entre aspas (JSON), esquema de auth (Basic ...) e valor
+                // entre aspas inteiro: senão "password": "x" e "Authorization: Basic b64" vazam.
                 .replaceAll("(?i)(authorization|proxy-authorization|cookie|set-cookie|x-api-key|"
                                 + "api[_-]?key|password|passwd|secret|token|postdata)"
-                                + "\\s*[:=]\\s*[^\\s|,;]+",
+                                + "\"?\\s*[:=]\\s*(?:(?:basic|digest|negotiate|ntlm)\\s+)?"
+                                + "(?:\"[^\"]*\"|[^\\s|,;\"]+)",
                         "$1=<redacted>")
-                .replaceAll("(?i)\\b(auth|pwd|pass|passphrase|session|session[_-]?id|sid)\\s*[:=]\\s*[^\\s|,;]+", "$1=<redacted>")
+                .replaceAll("(?i)\\b(auth|pwd|pass|passphrase|session|session[_-]?id|sid)"
+                                + "\"?\\s*[:=]\\s*(?:\"[^\"]*\"|[^\\s|,;\"]+)", "$1=<redacted>")
                 .replaceAll("\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]*", "<jwt>")
                 .replaceAll("\\b(?:sk|rk|pk)_(?:live|test)_[A-Za-z0-9]{8,}", "<redacted>")
                 .replaceAll("\\bgh[pousr]_[A-Za-z0-9]{20,}", "<redacted>");
