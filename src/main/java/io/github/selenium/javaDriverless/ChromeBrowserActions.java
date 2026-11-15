@@ -421,6 +421,10 @@ abstract class ChromeBrowserActions extends ChromeTargetActions {
             List<ProcessHandle> ownedProcessTree = captureProcessTree(ownedProcess);
             process = null;
             browserPid = null;
+            if (!cleanDirs) {
+                // Perfil mantido a pedido: tira do shutdown hook e da varredura de órfãos.
+                ManagedTempProfiles.retain(tempDir);
+            }
 
             try {
                 ChromeStartupResourceCleaner.cleanup(

@@ -17,12 +17,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Perfis temporários gerenciados ({@code selenium_driverless_*}). Antes só {@code quit()} os
  * removia: SIGTERM ou {@code kill -9} deixavam ~10 MB por sessão no diretório temporário.
  * Agora há shutdown hook (encerramento normal/SIGTERM) e varredura de órfãos na próxima criação
- * (kill -9), que só apaga diretórios com marcador de dono cujo processo morreu.
+ * (kill -9), que só apaga diretórios com marcador de dono do mesmo host cujo processo morreu.
  */
 final class ManagedTempProfiles {
 
     static final String PREFIX = "selenium_driverless_";
     static final String MARKER = ".javadriverless-owner";
+    /** Host local sem DNS; marcador e SingletonLock só valem no mesmo host. */
+    static final String LOCAL_HOST = localHostName();
     private static final int MAX_MARKER_BYTES = 256;
     private static final Set<Path> OWNED = ConcurrentHashMap.newKeySet();
     private static final java.util.Map<Path, ProcessHandle> PROCESSES = new ConcurrentHashMap<>();
@@ -32,19 +34,38 @@ final class ManagedTempProfiles {
     }
 
     static Path create() throws IOException {
-        Path tmpRoot = Path.of(System.getProperty("java.io.tmpdir"));
-        try {
-            sweepOrphans(tmpRoot);
-        } catch (IOException | RuntimeException ignored) {
-            // Varredura é melhor esforço: nunca impede iniciar o navegador.
-        }
         Path dir = Files.createTempDirectory(PREFIX);
         OWNED.add(dir);
         registerHook();
         ProcessHandle self = ProcessHandle.current();
         long start = self.info().startInstant().map(Instant::toEpochMilli).orElse(-1L);
-        Files.writeString(dir.resolve(MARKER), self.pid() + " " + start, StandardCharsets.US_ASCII);
+        Files.writeString(dir.resolve(MARKER), self.pid() + " " + start + " " + LOCAL_HOST,
+                StandardCharsets.US_ASCII);
+        try {
+            sweepOrphans(dir.getParent(), Files.getOwner(dir, LinkOption.NOFOLLOW_LINKS));
+        } catch (IOException | RuntimeException ignored) {
+            // Varredura é melhor esforço: nunca impede iniciar o navegador.
+        }
         return dir;
+    }
+
+    private static String localHostName() {
+        String host = null;
+        try {
+            host = Files.readString(Path.of("/proc/sys/kernel/hostname")).trim();
+        } catch (IOException | RuntimeException ignored) {
+            // Fora do Linux: cai para variáveis de ambiente.
+        }
+        if (host == null || host.isEmpty()) {
+            host = System.getenv("COMPUTERNAME");
+        }
+        if (host == null || host.isEmpty()) {
+            host = System.getenv("HOSTNAME");
+        }
+        if (host == null || host.isEmpty()) {
+            host = "unknown";
+        }
+        return host.replace(' ', '_');
     }
 
     static void release(Path dir) {
@@ -99,8 +120,19 @@ final class ManagedTempProfiles {
 
     /** Remove perfis órfãos em {@code tmpRoot}; retorna quantos foram apagados. */
     static int sweepOrphans(Path tmpRoot) throws IOException {
-        UserPrincipal me = tmpRoot.getFileSystem().getUserPrincipalLookupService()
-                .lookupPrincipalByName(System.getProperty("user.name"));
+        Path probe = null;
+        try {
+            // Descobre o dono esperado criando um diretório temporário descartável.
+            probe = Files.createTempDirectory(tmpRoot, ".jd-owner");
+            return sweepOrphans(tmpRoot, Files.getOwner(probe, LinkOption.NOFOLLOW_LINKS));
+        } finally {
+            if (probe != null) {
+                Files.deleteIfExists(probe);
+            }
+        }
+    }
+
+    static int sweepOrphans(Path tmpRoot, UserPrincipal me) throws IOException {
         int removed = 0;
         try (DirectoryStream<Path> entries = Files.newDirectoryStream(tmpRoot, PREFIX + "*")) {
             for (Path dir : entries) {
@@ -125,7 +157,8 @@ final class ManagedTempProfiles {
                 return false;
             }
             String[] parts = Files.readString(marker, StandardCharsets.US_ASCII).trim().split(" ");
-            if (parts.length != 2) {
+            if (parts.length != 3 || !parts[2].equals(LOCAL_HOST)) {
+                // Legado (2 partes) ou outro host/contêiner: não é nosso, preserva.
                 return false;
             }
             long pid = Long.parseLong(parts[0]);
@@ -150,10 +183,35 @@ final class ManagedTempProfiles {
     private static boolean chromeLockAlive(Path dir) {
         try {
             String target = Files.readSymbolicLink(dir.resolve("SingletonLock")).toString();
-            long pid = Long.parseLong(target.substring(target.lastIndexOf('-') + 1));
+            int sep = target.lastIndexOf('-');
+            String host = sep < 0 ? target : target.substring(0, sep);
+            if (!host.equals(LOCAL_HOST)) {
+                // Lock de outro host/contêiner: PID local não diz nada, preserva.
+                return true;
+            }
+            long pid = Long.parseLong(target.substring(sep + 1));
             return ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false);
         } catch (IOException | RuntimeException noLock) {
             return false;
+        }
+    }
+
+    /**
+     * Quit sem limpeza: o perfil passa a ser do chamador e sai do shutdown hook e da
+     * varredura de órfãos.
+     */
+    static boolean isOwned(Path dir) {
+        return OWNED.contains(dir);
+    }
+
+    static void retain(Path dir) {
+        if (dir != null && OWNED.contains(dir)) {
+            release(dir);
+            try {
+                Files.deleteIfExists(dir.resolve(MARKER));
+            } catch (IOException ignored) {
+                // Sem marcador, a varredura também não apaga o diretório.
+            }
         }
     }
 }

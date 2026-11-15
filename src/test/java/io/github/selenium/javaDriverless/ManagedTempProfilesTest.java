@@ -27,7 +27,7 @@ class ManagedTempProfilesTest {
     }
 
     private static String selfMarker(long startMillis) {
-        return ProcessHandle.current().pid() + " " + startMillis;
+        return ProcessHandle.current().pid() + " " + startMillis + " " + ManagedTempProfiles.LOCAL_HOST;
     }
 
     private static long selfStart() {
@@ -36,11 +36,11 @@ class ManagedTempProfilesTest {
 
     @Test
     void sweepDeletesOnlyMarkedProfilesOfDeadOwners() throws Exception {
-        Path dead = profile("selenium_driverless_dead", DEAD_PID + " 123");
+        Path dead = profile("selenium_driverless_dead", DEAD_PID + " 123 " + ManagedTempProfiles.LOCAL_HOST);
         Path alive = profile("selenium_driverless_alive", selfMarker(selfStart()));
         Path noMarker = profile("selenium_driverless_nomarker", null);
         Path invalid = profile("selenium_driverless_invalid", "nao-e-pid");
-        Path otherPrefix = profile("outro_dead", DEAD_PID + " 123");
+        Path otherPrefix = profile("outro_dead", DEAD_PID + " 123 " + ManagedTempProfiles.LOCAL_HOST);
 
         assertThat(ManagedTempProfiles.sweepOrphans(tmp)).isEqualTo(1);
 
@@ -62,7 +62,7 @@ class ManagedTempProfilesTest {
 
     @Test
     void sweepNeverFollowsSymlinkedProfiles() throws Exception {
-        Path target = profile("alvo_fora", DEAD_PID + " 123");
+        Path target = profile("alvo_fora", DEAD_PID + " 123 " + ManagedTempProfiles.LOCAL_HOST);
         Path link;
         try {
             link = Files.createSymbolicLink(tmp.resolve("selenium_driverless_link"), target);
@@ -87,6 +87,48 @@ class ManagedTempProfilesTest {
         } finally {
             ProfileStartupFiles.deleteDirectory(dir);
             ManagedTempProfiles.release(dir);
+        }
+    }
+
+    @Test
+    void sweepPreservesMarkerFromOtherHost() throws Exception {
+        Path otherHost = profile("selenium_driverless_outronode", DEAD_PID + " 123 outro-host");
+        assertThat(ManagedTempProfiles.sweepOrphans(tmp)).isZero();
+        assertThat(otherHost).exists();
+    }
+
+    @Test
+    void sweepPreservesLegacyTwoPartMarker() throws Exception {
+        Path legacy = profile("selenium_driverless_legado", DEAD_PID + " 123");
+        assertThat(ManagedTempProfiles.sweepOrphans(tmp)).isZero();
+        assertThat(legacy).exists();
+    }
+
+    @Test
+    void retainRemovesMarkerAndSurvivesSweep() throws Exception {
+        Path dir = ManagedTempProfiles.create();
+        try {
+            assertThat(ManagedTempProfiles.isOwned(dir)).isTrue();
+            ManagedTempProfiles.retain(dir);
+            assertThat(ManagedTempProfiles.isOwned(dir)).isFalse();
+            assertThat(dir.resolve(ManagedTempProfiles.MARKER)).doesNotExist();
+            assertThat(ManagedTempProfiles.sweepOrphans(dir.getParent())).isGreaterThanOrEqualTo(0);
+            assertThat(dir).exists();
+        } finally {
+            ProfileStartupFiles.deleteDirectory(dir);
+        }
+    }
+
+    @Test
+    void sweepPreservesProfileWhoseChromeLockPointsToOtherHost() throws Exception {
+        Path profileDir = profile("selenium_driverless_lock",
+                DEAD_PID + " 123 " + ManagedTempProfiles.LOCAL_HOST);
+        try {
+            Files.createSymbolicLink(profileDir.resolve("SingletonLock"), Path.of("outro-host-1"));
+            assertThat(ManagedTempProfiles.sweepOrphans(tmp)).isZero();
+            assertThat(profileDir).exists();
+        } catch (UnsupportedOperationException | java.io.IOException e) {
+            assumeTrue(false, "symlink indisponível");
         }
     }
 }
