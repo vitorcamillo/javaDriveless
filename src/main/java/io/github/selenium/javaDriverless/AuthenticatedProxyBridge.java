@@ -22,11 +22,15 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocket;
@@ -363,47 +367,85 @@ public final class AuthenticatedProxyBridge implements AutoCloseable {
     private void handleHttpRequest(Socket client, byte[] headerBytes, InputStream clientIn) throws IOException {
         Socket upstreamSocket = connectUpstream();
         try (upstreamSocket) {
-            // Uma requisição por conexão: só o primeiro cabeçalho recebe Proxy-Authorization, então
-            // keep-alive faria as requisições seguintes chegarem ao upstream sem credencial (407).
-            // Repasse enquadrado (um corpo de pedido, uma resposta) mesmo que cliente ou upstream
-            // ignorem Connection: close; Upgrade (101) vira túnel bruto como antes.
+            // Keep-alive: a mesma conexão upstream atende várias requisições do mesmo socket
+            // cliente, com Proxy-Authorization injetado em cada uma. Repasse enquadrado (um
+            // corpo de pedido, uma resposta por iteração); Upgrade (101) vira túnel bruto.
             OutputStream upstreamOut = upstreamSocket.getOutputStream();
             InputStream upstreamIn = new BufferedInputStream(upstreamSocket.getInputStream(), BUFFER_SIZE);
-            if (hasHeader(headerBytes, "upgrade")) {
-                upstreamOut.write(injectProxyAuthorization(headerBytes));
-                upstreamOut.flush();
-                pipeBothWays(client, upstreamSocket, clientIn, upstreamIn);
-                return;
-            }
-            upstreamOut.write(injectProxyAuthorization(forceConnectionClose(headerBytes, false)));
-            upstreamOut.flush();
-            // Corpo do cliente (POST) segue em paralelo antes de esperar a resposta.
-            executor.execute(() -> {
-                try {
-                    copyMessageBody(clientIn, upstreamOut, headerBytes, false);
-                } catch (IOException | RuntimeException invalid) {
-                    closeQuietly(upstreamSocket);
-                }
-            });
             OutputStream clientOut = client.getOutputStream();
-            boolean head = new String(headerBytes, 0, Math.min(5, headerBytes.length), StandardCharsets.ISO_8859_1)
-                    .equalsIgnoreCase("HEAD ");
             while (true) {
-                byte[] response = readHeaders(upstreamIn);
-                if (response.length == 0) {
+                if (hasHeader(headerBytes, "upgrade")) {
+                    upstreamOut.write(injectProxyAuthorization(headerBytes));
+                    upstreamOut.flush();
+                    pipeBothWays(client, upstreamSocket, clientIn, upstreamIn);
                     return;
                 }
-                int status = statusCode(response);
-                if (status >= 100 && status < 200) {
-                    clientOut.write(response);
-                    continue;
+                boolean clientClose = wantsClose(headerBytes);
+                upstreamOut.write(injectProxyAuthorization(stripHopByHop(headerBytes)));
+                upstreamOut.flush();
+                boolean head = new String(headerBytes, 0, Math.min(5, headerBytes.length), StandardCharsets.ISO_8859_1)
+                        .equalsIgnoreCase("HEAD ");
+                // Corpo do cliente (POST) segue em paralelo antes de esperar a resposta.
+                final byte[] requestHeaders = headerBytes;
+                CompletableFuture<Void> bodyDone = CompletableFuture.runAsync(() -> {
+                    try {
+                        copyMessageBody(clientIn, upstreamOut, requestHeaders, false);
+                    } catch (IOException invalid) {
+                        closeQuietly(upstreamSocket);
+                        throw new CompletionException(invalid);
+                    } catch (RuntimeException invalid) {
+                        closeQuietly(upstreamSocket);
+                        throw invalid;
+                    }
+                }, executor);
+                int informational = 0;
+                boolean reuse;
+                while (true) {
+                    byte[] response = readHeaders(upstreamIn);
+                    if (response.length == 0) {
+                        return;
+                    }
+                    int status = statusCode(response);
+                    if (status >= 100 && status < 200) {
+                        if (++informational > 16) {
+                            throw new IOException("Respostas 1xx em excesso");
+                        }
+                        clientOut.write(response);
+                        continue;
+                    }
+                    reuse = !clientClose && responseKeepsAlive(response, head, status);
+                    if (reuse) {
+                        clientOut.write(stripHopByHop(response));
+                    } else {
+                        clientOut.write(forceConnectionClose(response, true));
+                    }
+                    if (!head && status != 204 && status != 304) {
+                        copyMessageBody(upstreamIn, clientOut, response, true);
+                    }
+                    clientOut.flush();
+                    break;
                 }
-                clientOut.write(forceConnectionClose(response, true));
-                if (!head && status != 204 && status != 304) {
-                    copyMessageBody(upstreamIn, clientOut, response, true);
+                try {
+                    bodyDone.get(SOCKET_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException | ExecutionException failed) {
+                    return;
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    return;
                 }
-                clientOut.flush();
-                return;
+                if (!reuse) {
+                    return;
+                }
+                headerBytes = readHeaders(clientIn);
+                if (headerBytes.length == 0) {
+                    return;
+                }
+                String requestLine = new String(headerBytes, StandardCharsets.ISO_8859_1)
+                        .lines().findFirst().orElse("");
+                if (requestLine.trim().split("\\s+", 2)[0].equalsIgnoreCase("CONNECT")) {
+                    handleConnect(client, headerBytes, requestLine, clientIn);
+                    return;
+                }
             }
         } catch (RejectedExecutionException saturated) {
             closeQuietly(client);
@@ -437,13 +479,18 @@ public final class AuthenticatedProxyBridge implements AutoCloseable {
             out.write((line + "\r\n").getBytes(StandardCharsets.ISO_8859_1));
             int semicolon = line.indexOf(';');
             String hex = (semicolon >= 0 ? line.substring(0, semicolon) : line).trim();
-            if (hex.isEmpty() || hex.length() > 15) {
+            // Sem sinal: tamanho negativo ou malformado nunca vira parse longo.
+            if (!hex.matches("[0-9A-Fa-f]{1,15}")) {
                 throw new IOException("Chunk inválido");
             }
             long size = Long.parseLong(hex, 16);
             if (size == 0) {
                 String trailer;
+                int trailerLines = 0;
                 do {
+                    if (++trailerLines > 100) {
+                        throw new IOException("Trailers em excesso");
+                    }
                     trailer = readLine(in);
                     out.write((trailer + "\r\n").getBytes(StandardCharsets.ISO_8859_1));
                 } while (!trailer.isEmpty());
@@ -496,6 +543,15 @@ public final class AuthenticatedProxyBridge implements AutoCloseable {
 
     /** Remove Connection/Proxy-Connection/Keep-Alive e força {@code Connection: close}. */
     static byte[] forceConnectionClose(byte[] headerBytes, boolean response) {
+        return rewriteHopHeaders(headerBytes, true, response);
+    }
+
+    /** Remove só Proxy-Connection/Keep-Alive, preservando o {@code Connection} original. */
+    private static byte[] stripHopByHop(byte[] headerBytes) {
+        return rewriteHopHeaders(headerBytes, false, false);
+    }
+
+    private static byte[] rewriteHopHeaders(byte[] headerBytes, boolean forceClose, boolean response) {
         String headers = new String(headerBytes, StandardCharsets.ISO_8859_1);
         int end = headers.indexOf("\r\n\r\n");
         if (end < 0) {
@@ -505,17 +561,71 @@ public final class AuthenticatedProxyBridge implements AutoCloseable {
         for (String line : headers.substring(0, end).split("\r\n", -1)) {
             int colon = line.indexOf(':');
             String name = colon > 0 ? line.substring(0, colon).trim().toLowerCase(Locale.ROOT) : "";
-            if (out.length() > 0 && (name.equals("connection") || name.equals("proxy-connection")
-                    || name.equals("keep-alive"))) {
+            boolean hop = name.equals("connection") || name.equals("proxy-connection")
+                    || name.equals("keep-alive");
+            // Sem força: Connection original permanece; só Proxy-Connection/Keep-Alive caem.
+            boolean drop = hop && (forceClose || !name.equals("connection"));
+            if (out.length() > 0 && drop) {
                 continue;
             }
             out.append(line).append("\r\n");
         }
-        out.append("Connection: close\r\n");
-        if (response) {
-            out.append("Proxy-Connection: close\r\n");
+        if (forceClose) {
+            out.append("Connection: close\r\n");
+            if (response) {
+                out.append("Proxy-Connection: close\r\n");
+            }
         }
         return out.append("\r\n").toString().getBytes(StandardCharsets.ISO_8859_1);
+    }
+
+    /** true se algum cabeçalho {@code name} lista o token (case-insensitive, separado por vírgula). */
+    private static boolean headerTokenPresent(byte[] headerBytes, String name, String token) {
+        String headers = new String(headerBytes, StandardCharsets.ISO_8859_1);
+        int end = headers.indexOf("\r\n\r\n");
+        String section = end >= 0 ? headers.substring(0, end) : headers;
+        for (String line : section.split("\r\n")) {
+            int colon = line.indexOf(':');
+            if (colon <= 0 || !line.substring(0, colon).trim().equalsIgnoreCase(name)) {
+                continue;
+            }
+            for (String value : line.substring(colon + 1).split(",")) {
+                if (value.trim().equalsIgnoreCase(token)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** true se o pedido pede encerramento: close explícito ou HTTP/1.0 sem keep-alive. */
+    private static boolean wantsClose(byte[] request) {
+        if (headerTokenPresent(request, "connection", "close")
+                || headerTokenPresent(request, "proxy-connection", "close")) {
+            return true;
+        }
+        String firstLine = new String(request, StandardCharsets.ISO_8859_1).split("\r\n", 2)[0];
+        return firstLine.trim().endsWith("HTTP/1.0")
+                && !headerTokenPresent(request, "connection", "keep-alive")
+                && !headerTokenPresent(request, "proxy-connection", "keep-alive");
+    }
+
+    /** true se a resposta permite reusar a conexão para a próxima requisição. */
+    private static boolean responseKeepsAlive(byte[] response, boolean head, int status) {
+        if (headerTokenPresent(response, "connection", "close")
+                || headerTokenPresent(response, "proxy-connection", "close")) {
+            return false;
+        }
+        String lower = new String(response, StandardCharsets.ISO_8859_1).toLowerCase(Locale.ROOT);
+        if (lower.split("\r\n", 2)[0].startsWith("http/1.0")
+                && !headerTokenPresent(response, "connection", "keep-alive")
+                && !headerTokenPresent(response, "proxy-connection", "keep-alive")) {
+            return false;
+        }
+        boolean framed = Pattern.compile("\r\ntransfer-encoding:[^\r]*chunked").matcher(lower).find()
+                || lower.contains("\r\ncontent-length:");
+        return framed || head || status == 204 || status == 304
+                || (status >= 100 && status < 200);
     }
 
     private Socket connectUpstream() throws IOException {
