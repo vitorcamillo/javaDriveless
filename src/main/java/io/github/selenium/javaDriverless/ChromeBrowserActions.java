@@ -44,7 +44,6 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 
@@ -54,9 +53,7 @@ abstract class ChromeBrowserActions extends ChromeTargetActions {
     }
 
     public CompletableFuture<Void> sleep(double seconds) {
-        // delayedExecutor: a espera não ocupa thread do ForkJoinPool comum.
-        return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(
-                (long) (seconds * 1000), TimeUnit.MILLISECONDS));
+        return io.github.selenium.javaDriverless.utils.Delays.seconds(seconds);
     }
 
     public CompletableFuture<Void> back() {

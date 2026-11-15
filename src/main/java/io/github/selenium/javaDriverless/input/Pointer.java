@@ -2,11 +2,11 @@ package io.github.selenium.javaDriverless.input;
 
 import io.github.selenium.javaDriverless.cdp.CDPCommandExecutor;
 import io.github.selenium.javaDriverless.scripts.Geometry;
+import io.github.selenium.javaDriverless.utils.Delays;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -371,12 +371,10 @@ public class Pointer {
         int jx = p[0], jy = p[1];
 
         // moveTo humanizado antes do down/up (sem isto o duplo clique teleporta — tell de bot).
-        // FIX BUG-13: Usar delayedExecutor em vez de Thread.sleep para não bloquear ForkJoinPool
         return moveTo(jx, jy)
             .thenCompose(v -> down(jx, jy, MouseButton.LEFT, 1))
             .thenCompose(v -> up(jx, jy, MouseButton.LEFT, 1))
-            .thenCompose(v -> CompletableFuture.runAsync(() -> {},
-                CompletableFuture.delayedExecutor(50, java.util.concurrent.TimeUnit.MILLISECONDS)))
+            .thenCompose(v -> pausa(50))
             .thenCompose(v -> down(jx, jy, MouseButton.LEFT, 2))
             .thenCompose(v -> up(jx, jy, MouseButton.LEFT, 2));
     }
@@ -423,8 +421,7 @@ public class Pointer {
      * a thread do ForkJoinPool que executa os callbacks.
      */
     private static CompletableFuture<Void> pausa(long millis) {
-        return CompletableFuture.runAsync(() -> {},
-            CompletableFuture.delayedExecutor(millis, TimeUnit.MILLISECONDS));
+        return Delays.millis(millis);
     }
 
     /**

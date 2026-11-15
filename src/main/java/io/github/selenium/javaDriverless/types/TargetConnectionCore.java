@@ -10,6 +10,7 @@ import io.github.selenium.javaDriverless.cdp.pipe.CdpPipeRegistry;
 import io.github.selenium.javaDriverless.input.Pointer;
 import io.github.selenium.javaDriverless.logging.JavaDriverlessLogger;
 import io.github.selenium.javaDriverless.types.TypesExceptions.NoSuchIframe;
+import io.github.selenium.javaDriverless.utils.Delays;
 
 import org.slf4j.Logger;
 
@@ -17,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.BiConsumer;
@@ -444,9 +444,7 @@ abstract class TargetConnectionCore implements CDPCommandExecutor {
      * @return CompletableFuture que completa após o tempo
      */
     public CompletableFuture<Void> sleep(double seconds) {
-        // delayedExecutor: a espera não ocupa thread do ForkJoinPool comum.
-        return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(
-                (long) (seconds * 1000), TimeUnit.MILLISECONDS));
+        return Delays.seconds(seconds);
     }
 
     @Override

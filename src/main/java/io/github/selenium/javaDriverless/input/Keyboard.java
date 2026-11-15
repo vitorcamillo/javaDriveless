@@ -1,6 +1,7 @@
 package io.github.selenium.javaDriverless.input;
 
 import io.github.selenium.javaDriverless.types.Target;
+import io.github.selenium.javaDriverless.utils.Delays;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -363,9 +364,7 @@ public class Keyboard {
      * Delay helper
      */
     private CompletableFuture<Void> delay(int milliseconds) {
-        // delayedExecutor: a espera não ocupa thread do ForkJoinPool comum.
-        return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(
-                milliseconds, java.util.concurrent.TimeUnit.MILLISECONDS));
+        return Delays.millis(milliseconds);
     }
 
     /**

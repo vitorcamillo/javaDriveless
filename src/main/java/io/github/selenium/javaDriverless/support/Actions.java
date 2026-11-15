@@ -6,6 +6,7 @@ import io.github.selenium.javaDriverless.input.Keyboard;
 import io.github.selenium.javaDriverless.input.Keyboard.Keys;
 import io.github.selenium.javaDriverless.input.Pointer;
 import io.github.selenium.javaDriverless.types.WebElement;
+import io.github.selenium.javaDriverless.utils.Delays;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -207,13 +208,7 @@ public class Actions {
      * Adiciona uma pausa.
      */
     public Actions pause(long millis) {
-        chain = chain.thenCompose(v -> CompletableFuture.runAsync(() -> {
-            try {
-                Thread.sleep(millis);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }));
+        chain = chain.thenCompose(v -> Delays.millis(millis));
         return this;
     }
 

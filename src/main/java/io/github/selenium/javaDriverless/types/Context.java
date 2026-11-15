@@ -28,6 +28,7 @@ import io.github.selenium.javaDriverless.Chrome;
 import io.github.selenium.javaDriverless.input.Pointer;
 import io.github.selenium.javaDriverless.scripts.DriverUtils;
 import io.github.selenium.javaDriverless.scripts.SwitchTo;
+import io.github.selenium.javaDriverless.utils.Delays;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -388,9 +389,7 @@ public class Context implements AutoCloseable {
      * @return CompletableFuture que completa após o tempo
      */
     public CompletableFuture<Void> sleep(double seconds) {
-        // delayedExecutor: a espera não ocupa thread do ForkJoinPool comum.
-        return CompletableFuture.runAsync(() -> { }, CompletableFuture.delayedExecutor(
-                (long) (seconds * 1000), java.util.concurrent.TimeUnit.MILLISECONDS));
+        return Delays.seconds(seconds);
     }
     
     /**
