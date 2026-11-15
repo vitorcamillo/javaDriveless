@@ -59,14 +59,21 @@ class KeyboardCdpTest {
 
     @AfterEach
     void tearDown() {
+        // Fechamento determinístico: close() só inicia o handshake e stop(0) não
+        // espera as threads do cliente/servidor morrerem; no fork reutilizado
+        // (reuseForks) elas vazam a cada teste até o processo ser morto (143).
         try {
-            if (target.getSocket() != null) {
-                target.getSocket().close();
+            if (target != null && target.getSocket() != null) {
+                target.getSocket().closeBlocking();
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         } catch (Exception ignored) {
         }
         try {
-            server.stop(0);
+            if (server != null) {
+                server.stop(1000);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
