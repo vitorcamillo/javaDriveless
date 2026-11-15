@@ -17,6 +17,9 @@ public final class SafeDiagnostics {
             "\\b(?:" + SAFE_IDENTIFIERS.stream().map(Pattern::quote)
                     .reduce((left, right) -> left + "|" + right).orElse("") + ")\\b");
 
+    /** Valor sensível: entre aspas (com escapes, fechamento opcional) ou token sem separador. */
+    private static final String VALUE = "(?:\"(?:[^\"\\\\]|\\\\.)*\"?|[^\\s|,;\"]+)";
+
     private SafeDiagnostics() {
     }
 
@@ -30,16 +33,20 @@ public final class SafeDiagnostics {
                 .replaceAll("(?i)(?:https?|wss?|file)://\\S+", "<url>")
                 .replaceAll("(?i)bearer\\s+[^\\s|,;]+", "Bearer <redacted>")
                 // Userinfo sem esquema (user:senha@host): URLs com esquema já viraram <url>.
-                .replaceAll("(?<![\\w.-])[^\\s:/@\"'<>]+:[^\\s/@\"'<>]+@(?=[A-Za-z0-9\\[])", "<redacted>@")
+                // Senha pode ter '/' e '@': o greedy recua até o último '@' antes do host.
+                .replaceAll("(?<![\\w.-])[^\\s:/@\"'<>]+:[^\\s\"'<>]+@(?=[A-Za-z0-9\\[])", "<redacted>@")
+                // Cabeçalho Cookie e Authorization Digest/NTLM/Negotiate: vários pares até o fim da linha.
+                .replaceAll("(?i)\\b(cookie|set-cookie)\\s*:\\s*(?!\")[^\\r\\n|]+", "$1=<redacted>")
+                .replaceAll("(?i)\\b(authorization|proxy-authorization)\\s*:\\s*(?:digest|negotiate|ntlm)\\s[^\\r\\n|]+",
+                        "$1=<redacted>")
                 // Chave opcionalmente entre aspas (JSON), esquema de auth (Basic ...) e valor
-                // entre aspas inteiro: senão "password": "x" e "Authorization: Basic b64" vazam.
+                // entre aspas inteiro (com escapes; aspa sem fechamento vai até o fim).
                 .replaceAll("(?i)(authorization|proxy-authorization|cookie|set-cookie|x-api-key|"
                                 + "api[_-]?key|password|passwd|secret|token|postdata)"
-                                + "\"?\\s*[:=]\\s*(?:(?:basic|digest|negotiate|ntlm)\\s+)?"
-                                + "(?:\"[^\"]*\"|[^\\s|,;\"]+)",
+                                + "\"?\\s*[:=]\\s*(?:(?:basic|digest|negotiate|ntlm)\\s+)?" + VALUE,
                         "$1=<redacted>")
                 .replaceAll("(?i)\\b(auth|pwd|pass|passphrase|session|session[_-]?id|sid)"
-                                + "\"?\\s*[:=]\\s*(?:\"[^\"]*\"|[^\\s|,;\"]+)", "$1=<redacted>")
+                                + "\"?\\s*[:=]\\s*" + VALUE, "$1=<redacted>")
                 .replaceAll("\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]*", "<jwt>")
                 .replaceAll("\\b(?:sk|rk|pk)_(?:live|test)_[A-Za-z0-9]{8,}", "<redacted>")
                 .replaceAll("\\bgh[pousr]_[A-Za-z0-9]{20,}", "<redacted>");

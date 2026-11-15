@@ -88,4 +88,21 @@ class SafeDiagnosticsTest {
                 .contains("proxy.example.com");
         assertThat(SafeDiagnostics.sanitizeMessage("erro em 10:30 no host")).isEqualTo("erro em 10:30 no host");
     }
+
+    @Test
+    void sanitizeMessageRedactsUnclosedQuotesMultiPairHeadersAndSpecialPasswords() {
+        assertThat(SafeDiagnostics.sanitizeMessage("password=\"hunter2VALUE")).doesNotContain("VALUE");
+        assertThat(SafeDiagnostics.sanitizeMessage("{\"password\": \"hunter2VALUE extra"))
+                .doesNotContain("VALUE");
+        assertThat(SafeDiagnostics.sanitizeMessage("{\"password\": \"a\\\"bVALUE\"}")).doesNotContain("VALUE");
+        assertThat(SafeDiagnostics.sanitizeMessage("Cookie: a=1; JSESSIONID=SESSVALUE; other=xyz"))
+                .doesNotContain("SESSVALUE", "xyz");
+        assertThat(SafeDiagnostics.sanitizeMessage(
+                "Authorization: Digest username=\"u\", response=\"HASHVALUE\""))
+                .doesNotContain("HASHVALUE");
+        assertThat(SafeDiagnostics.sanitizeMessage("proxy user:pa/ssVALUE@10.0.0.1:8080 falhou"))
+                .doesNotContain("VALUE");
+        assertThat(SafeDiagnostics.sanitizeMessage("proxy user:p@ssVALUE@10.0.0.1:8080 falhou"))
+                .doesNotContain("VALUE");
+    }
 }
