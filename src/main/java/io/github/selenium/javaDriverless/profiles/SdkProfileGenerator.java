@@ -18,10 +18,10 @@ public final class SdkProfileGenerator {
             throw new IllegalArgumentException("Preset request must not be null");
         }
         SdkProfilePreset preset = SdkProfilePreset.parse(request.selectedPreset());
-        if (preset == SdkProfilePreset.PHANTOMPASS) {
+        if (preset == SdkProfilePreset.PHANTORAPASS) {
             throw new IllegalArgumentException(
-                    "O preset phantompass exige PhantomPassProfile com runtimeBase "
-                            + "windows, linux ou docker; use SdkProfilePresets.phantomPass(...)");
+                    "O preset phantorapass exige PhantoraPassProfile com runtimeBase "
+                            + "windows, linux ou docker; use SdkProfilePresets.phantoraPass(...)");
         }
         validateOfficialRequest(request, preset);
         SdkProfile profile = new SdkProfile(

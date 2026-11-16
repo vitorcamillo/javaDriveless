@@ -3,7 +3,7 @@ package io.github.selenium.javaDriverless;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.selenium.javaDriverless.types.BrowserFingerprintProfile;
 import io.github.selenium.javaDriverless.types.ChromeOptions;
-import io.github.selenium.javaDriverless.profiles.PhantomPassProfile;
+import io.github.selenium.javaDriverless.profiles.PhantoraPassProfile;
 import io.github.selenium.javaDriverless.profiles.ProfileChromeOptionsFactory;
 import io.github.selenium.javaDriverless.profiles.SdkProfilePreset;
 import io.github.selenium.javaDriverless.profiles.SdkProfilePresets;
@@ -28,13 +28,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class MinimalCdpCapabilityContractTest {
 
     @Test
-    void phantomPassNativeDeniedPermissionStillPassesTheMinimalCapabilityGate() {
-        PhantomPassProfile contract = SdkProfilePresets.phantomPass(
+    void phantoraPassNativeDeniedPermissionStillPassesTheMinimalCapabilityGate() {
+        PhantoraPassProfile contract = SdkProfilePresets.phantoraPass(
                 SdkProfilePreset.LINUX, "permission-gate", "Permission gate", "BR");
         contract.permissions.geolocation = "deny";
         contract.permissions.notifications = "denied";
         contract.permissions.extra.put("camera", "denied");
-        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantomPass(contract);
+        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantoraPass(contract);
 
         assertThatCode(() -> MinimalCdpCapabilityContract.requireSupported(
                 options.getFingerprintProfile(), false, Map.of()))

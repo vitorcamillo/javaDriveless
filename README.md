@@ -26,7 +26,9 @@ mvn -B -ntp clean test
 mvn -B -ntp package
 ```
 
-Disponível no Maven Central como `io.github.vitorcamillo:javadriveless:1.12.5`.
+Coordenada: `io.github.vitorcamillo:javadriveless:2.0.0`.
+A 2.0.0 renomeia a API `PhantomPass*` para `PhantoraPass*` (`applyPhantoraPass`, `SdkProfilePreset.PHANTORAPASS`
+etc.) e quebra a compatibilidade de código; a 1.12.5 é a última versão com os nomes antigos.
 A 1.12.5 endurece o catálogo de perfis (lock com prazo, escrita owner-only atômica, limites
 anti-OOM) e corrige concorrência e timeouts da reauditoria, sobre as correções da 1.12.3.
 

@@ -15,12 +15,12 @@ class SupportedProfileCatalogTest {
     @Test
     void advertisesExactlyFiveCanonicalProfiles() {
         assertThat(SdkProfilePreset.supportedIds()).containsExactly(
-                "windows", "linux", "docker", "phantompass", "seleniumlike");
+                "windows", "linux", "docker", "phantorapass", "seleniumlike");
         assertThat(SdkProfilePresets.supportedPresets()).containsExactly(
                 SdkProfilePreset.WINDOWS,
                 SdkProfilePreset.LINUX,
                 SdkProfilePreset.DOCKER,
-                SdkProfilePreset.PHANTOMPASS,
+                SdkProfilePreset.PHANTORAPASS,
                 SdkProfilePreset.SELENIUMLIKE);
     }
 
@@ -44,7 +44,7 @@ class SupportedProfileCatalogTest {
                 .isEqualTo(SdkProfilePreset.DOCKER);
 
         assertThatThrownBy(() -> SdkProfilePreset.detectDefaultRuntime(
-                "Linux", Map.of(SdkProfilePreset.PRESET_ENV, "phantompass"), false))
+                "Linux", Map.of(SdkProfilePreset.PRESET_ENV, "phantorapass"), false))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("seleção explícita");
         assertThatThrownBy(() -> SdkProfilePreset.detectDefaultRuntime("macOS", Map.of(), false))
@@ -65,7 +65,7 @@ class SupportedProfileCatalogTest {
                     .hasMessageContaining("windows")
                     .hasMessageContaining("linux")
                     .hasMessageContaining("docker")
-                    .hasMessageContaining("phantompass")
+                    .hasMessageContaining("phantorapass")
                     .hasMessageContaining("seleniumlike");
         }
     }
@@ -151,13 +151,13 @@ class SupportedProfileCatalogTest {
     }
 
     @Test
-    void phantomPassRequiresTheDedicatedConfigurableContract() {
+    void phantoraPassRequiresTheDedicatedConfigurableContract() {
         SdkProfilePresetRequest request = new SdkProfilePresetRequest(
-                "saas", "SaaS", "BR", "phantompass");
+                "saas", "SaaS", "BR", "phantorapass");
 
         assertThatThrownBy(() -> SdkProfileGenerator.fromPreset(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("PhantomPassProfile")
+                .hasMessageContaining("PhantoraPassProfile")
                 .hasMessageContaining("runtimeBase");
     }
 
@@ -178,8 +178,8 @@ class SupportedProfileCatalogTest {
     }
 
     @Test
-    void phantomPassDockerContractKeepsConsumerListsMutable() {
-        PhantomPassProfile contract = SdkProfilePresets.phantomPass(
+    void phantoraPassDockerContractKeepsConsumerListsMutable() {
+        PhantoraPassProfile contract = SdkProfilePresets.phantoraPass(
                 SdkProfilePreset.DOCKER, "editable", "Editable", "BR");
 
         contract.profile.browser.extraArgs.add("--disable-sync");

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Full browser session contract expected from PhantomPass.
+ * Full browser session contract expected from PhantoraPass.
  */
 public class BrowserSessionProfile {
     public ProxyConfig proxy;

@@ -110,7 +110,7 @@ abstract class ChromeOptionsFingerprintOptions extends ChromeOptionsRuntimeOptio
     }
 
     /**
-     * Applies the complete PhantomPass session contract in one operation.
+     * Applies the complete PhantoraPass session contract in one operation.
      *
      * @param sessionProfile profile containing fingerprint, proxy, DNS and permissions
      */

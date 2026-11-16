@@ -12,7 +12,7 @@ public enum SdkProfilePreset {
     WINDOWS("windows"),
     LINUX("linux"),
     DOCKER("docker"),
-    PHANTOMPASS("phantompass"),
+    PHANTORAPASS("phantorapass"),
     SELENIUMLIKE("seleniumlike");
 
     public static final String PRESET_ENV = "JAVA_DRIVERLESS_PROFILE_PRESET";

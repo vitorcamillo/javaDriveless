@@ -4,7 +4,7 @@ package io.github.selenium.javaDriverless.types;
  * Resolve o {@link EgressInfo} (geo do IP de saída) a partir do proxy configurado, para tornar o
  * fingerprint coerente com o IP que o site enxerga (timezone, idioma, geolocalização e WebRTC).
  *
- * <p>A engine é AGNÓSTICA à fonte: o consumidor (ex.: phantomPass) implementa do jeito que preferir
+ * <p>A engine é AGNÓSTICA à fonte: o consumidor (ex.: phantoraPass) implementa do jeito que preferir
  * — a partir de dado próprio do proxy, de uma base geo-IP offline, de um provider HTTP, etc. Para
  * o caso mais comum (o consumidor já conhece o egress) basta usar
  * {@code ChromeOptions.setEgressInfo(...)} em vez de um resolver.

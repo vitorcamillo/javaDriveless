@@ -9,7 +9,7 @@ import java.util.Locale;
  *
  * <p>Tudo que um site anti-fraude cruza com o GeoIP — timezone, idioma, geo,
  * WebRTC e tipo de conexão — passa a refletir o IP do proxy, em vez de valores
- * cravados no perfil. É o ponto único de coerência: consumidores (phantomPass,
+ * cravados no perfil. É o ponto único de coerência: consumidores (phantoraPass,
  * bots, etc.) só preenchem um {@link EgressInfo} e chamam {@link #apply}.
  *
  * <p>Princípio anti-vazamento: sem dados do IP, NÃO inventa. Quando não há

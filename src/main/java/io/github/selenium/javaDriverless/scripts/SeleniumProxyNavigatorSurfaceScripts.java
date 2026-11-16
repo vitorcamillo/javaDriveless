@@ -56,7 +56,7 @@ final class SeleniumProxyNavigatorSurfaceScripts {
 
   // ═══ SPEECH VOICES CONSISTENCY ═══
   // Native Linux/espeak often exposes a default voice in an unrelated locale.
-  // Keep this profile-driven so PhantomPass can provide country-specific voices.
+  // Keep this profile-driven so PhantoraPass can provide country-specific voices.
   try {
     if (window.speechSynthesis && speechProfile.mode !== 'real') {
       const installSpeechVoicesConsistency = () => {

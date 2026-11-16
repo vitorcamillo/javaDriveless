@@ -41,9 +41,9 @@ class ChromeStartupNavigationPlanTest {
     @Test
     void absolutePathIsAPositionalTargetInsteadOfAChromeSwitch() {
         var plan = ChromeStartupNavigationPlan.local(
-                "about:blank", List.of("/opt/phantompass/start.html"));
+                "about:blank", List.of("/opt/phantorapass/start.html"));
 
         assertThat(plan.launchArguments()).containsExactly("about:blank");
-        assertThat(plan.deferredUrl()).isEqualTo("/opt/phantompass/start.html");
+        assertThat(plan.deferredUrl()).isEqualTo("/opt/phantorapass/start.html");
     }
 }

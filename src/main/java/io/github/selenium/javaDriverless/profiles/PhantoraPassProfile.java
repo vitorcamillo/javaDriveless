@@ -8,13 +8,13 @@ import io.github.selenium.javaDriverless.types.ProxyConfig;
 import java.util.HashMap;
 
 /**
- * Complete, consumer-owned PhantomPass launch contract.
+ * Complete, consumer-owned PhantoraPass launch contract.
  *
  * <p>The nested {@link #profile} controls browser, fingerprint, storage, extensions and resource
  * policy. The remaining fields complete the session with authenticated proxy, location, DNS,
  * permissions and egress coherence without persisting proxy credentials in {@link SdkProfile}.</p>
  */
-public class PhantomPassProfile {
+public class PhantoraPassProfile {
     public SdkProfilePreset runtimeBase;
     public SdkProfile profile;
     public ProxyConfig proxy;
@@ -24,13 +24,13 @@ public class PhantomPassProfile {
     public EgressInfo egressInfo;
     public EgressResolver egressResolver;
 
-    public PhantomPassProfile applyDefaults() {
+    public PhantoraPassProfile applyDefaults() {
         if (profile == null) {
-            throw new IllegalArgumentException("PhantomPassProfile.profile não pode ser nulo");
+            throw new IllegalArgumentException("PhantoraPassProfile.profile não pode ser nulo");
         }
         if (runtimeBase == null || !runtimeBase.isRuntimeBase()) {
             throw new IllegalArgumentException(
-                    "PhantomPassProfile.runtimeBase deve ser windows, linux ou docker");
+                    "PhantoraPassProfile.runtimeBase deve ser windows, linux ou docker");
         }
         profile.applyDefaults();
         if (location == null) {
@@ -46,8 +46,8 @@ public class PhantomPassProfile {
     }
 
     /** Returns an independent contract for policy evaluation or adapter assembly. */
-    public PhantomPassProfile copy() {
-        PhantomPassProfile copy = new PhantomPassProfile();
+    public PhantoraPassProfile copy() {
+        PhantoraPassProfile copy = new PhantoraPassProfile();
         copy.runtimeBase = runtimeBase;
         copy.profile = profile == null ? null : profile.copy();
         copy.proxy = proxy == null ? null : proxy.copy();

@@ -35,7 +35,7 @@ public final class SdkProfilePresets {
             SdkProfilePreset.WINDOWS,
             SdkProfilePreset.LINUX,
             SdkProfilePreset.DOCKER,
-            SdkProfilePreset.PHANTOMPASS,
+            SdkProfilePreset.PHANTORAPASS,
             SdkProfilePreset.SELENIUMLIKE);
 
     private SdkProfilePresets() {
@@ -68,10 +68,10 @@ public final class SdkProfilePresets {
     }
 
     /**
-     * Creates the consumer-owned PhantomPass contract over one validated runtime base.
+     * Creates the consumer-owned PhantoraPass contract over one validated runtime base.
      * Every nested field remains editable before it is converted to isolated ChromeOptions.
      */
-    public static PhantomPassProfile phantomPass(
+    public static PhantoraPassProfile phantoraPass(
             SdkProfilePreset runtimeBase,
             String id,
             String name,
@@ -79,14 +79,14 @@ public final class SdkProfilePresets {
         if (runtimeBase == null || !runtimeBase.isRuntimeBase()) {
             throw new IllegalArgumentException("runtimeBase deve ser windows, linux ou docker");
         }
-        PhantomPassProfile contract = new PhantomPassProfile();
+        PhantoraPassProfile contract = new PhantoraPassProfile();
         contract.runtimeBase = runtimeBase;
         contract.profile = create(runtimeBase, id, name, countryCode);
-        contract.profile.preset = SdkProfilePreset.PHANTOMPASS.id();
+        contract.profile.preset = SdkProfilePreset.PHANTORAPASS.id();
         contract.profile.metadata.tags.remove("preset:" + runtimeBase.id());
-        contract.profile.metadata.tags.add("preset:phantompass");
+        contract.profile.metadata.tags.add("preset:phantorapass");
         contract.profile.metadata.tags.add("runtime-base:" + runtimeBase.id());
-        contract.profile.runtimeSurfaces.add("phantompass-configurable");
+        contract.profile.runtimeSurfaces.add("phantorapass-configurable");
         contract.location.countryCode = countryCode == null ? "" : countryCode.trim();
         contract.permissions.geolocation = contract.profile.fingerprint.permissions.geolocation;
         contract.permissions.notifications = contract.profile.fingerprint.permissions.notifications;

@@ -53,7 +53,7 @@ abstract class StealthFingerprintConsistencyChecks extends StealthFingerprintBro
                 var d = Object.getOwnPropertyDescriptor(c[0], c[1]);
                 if (d && d.get) {
                   var s = d.get.toString();
-                  if (s.includes('Proxy') || s.includes('phantompass') || s.includes('selenium')) {
+                  if (s.includes('Proxy') || s.includes('phantorapass') || s.includes('selenium')) {
                     issues.push(c[1]+':LEAKED');
                   }
                 }

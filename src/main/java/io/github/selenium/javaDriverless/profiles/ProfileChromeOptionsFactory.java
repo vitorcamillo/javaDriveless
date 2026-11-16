@@ -28,25 +28,25 @@ public final class ProfileChromeOptionsFactory {
         return build(profile, plan, true);
     }
 
-    /** Builds isolated options from the complete, consumer-owned PhantomPass contract. */
-    public static ChromeOptions fromPhantomPass(PhantomPassProfile contract) {
-        PhantomPassRuntime runtime = defaultPhantomPassRuntime(contract);
-        return applyPhantomPass(contract, runtime, new ChromeOptions());
+    /** Builds isolated options from the complete, consumer-owned PhantoraPass contract. */
+    public static ChromeOptions fromPhantoraPass(PhantoraPassProfile contract) {
+        PhantoraPassRuntime runtime = defaultPhantoraPassRuntime(contract);
+        return applyPhantoraPass(contract, runtime, new ChromeOptions());
     }
 
-    /** Applies the validated PhantomPass policy to a consumer-owned ChromeOptions subtype. */
-    public static <T extends ChromeOptions> T applyPhantomPass(
-            PhantomPassProfile contract,
-            PhantomPassRuntime physicalRuntime,
+    /** Applies the validated PhantoraPass policy to a consumer-owned ChromeOptions subtype. */
+    public static <T extends ChromeOptions> T applyPhantoraPass(
+            PhantoraPassProfile contract,
+            PhantoraPassRuntime physicalRuntime,
             T options) {
         if (options == null) {
             throw new IllegalArgumentException("ChromeOptions não pode ser nulo");
         }
-        PhantomPassProfile evaluated = PhantomPassProfilePolicy
+        PhantoraPassProfile evaluated = PhantoraPassProfilePolicy
                 .evaluateForLaunch(contract, physicalRuntime)
                 .requireAcceptedProfile();
         SdkProfile runtime = evaluated.profile.copy();
-        runtime.preset = SdkProfilePreset.PHANTOMPASS.id();
+        runtime.preset = SdkProfilePreset.PHANTORAPASS.id();
         ProfileLaunchPlan plan = ProfileLaunchPlanner.plan(runtime);
         build(runtime, plan, true, options);
 
@@ -68,17 +68,17 @@ public final class ProfileChromeOptionsFactory {
         return options;
     }
 
-    private static PhantomPassRuntime defaultPhantomPassRuntime(PhantomPassProfile contract) {
+    private static PhantoraPassRuntime defaultPhantoraPassRuntime(PhantoraPassProfile contract) {
         if (contract == null || contract.profile == null || contract.runtimeBase == null) {
-            return PhantomPassRuntime.NATIVE_HOST;
+            return PhantoraPassRuntime.NATIVE_HOST;
         }
         if (contract.runtimeBase != SdkProfilePreset.DOCKER) {
-            return PhantomPassRuntime.NATIVE_HOST;
+            return PhantoraPassRuntime.NATIVE_HOST;
         }
         BrowserFingerprintProfile.Screen screen = contract.profile.fingerprint == null
                 ? null : contract.profile.fingerprint.screen;
-        if (screen == null) return PhantomPassRuntime.VIRTUAL_DISPLAY;
-        return PhantomPassRuntime.virtualDisplay(new PhantomPassRuntime.Geometry(
+        if (screen == null) return PhantoraPassRuntime.VIRTUAL_DISPLAY;
+        return PhantoraPassRuntime.virtualDisplay(new PhantoraPassRuntime.Geometry(
                 screen.width, screen.height, screen.availWidth, screen.availHeight,
                 screen.colorDepth, screen.pixelDepth, screen.deviceScaleFactor));
     }
@@ -195,25 +195,25 @@ public final class ProfileChromeOptionsFactory {
         }
     }
 
-    private static ProxyConfig effectiveProxy(PhantomPassProfile contract, SdkProfile runtime) {
+    private static ProxyConfig effectiveProxy(PhantoraPassProfile contract, SdkProfile runtime) {
         if (contract.proxy != null) {
             return contract.proxy.copy();
         }
         return runtime.proxy == null ? null : runtime.proxy.toProxyConfig();
     }
 
-    private static void copyLocation(PhantomPassProfile contract, BrowserSessionProfile session) {
+    private static void copyLocation(PhantoraPassProfile contract, BrowserSessionProfile session) {
         session.location.countryCode = contract.location.countryCode;
         session.location.region = contract.location.region;
         session.location.city = contract.location.city;
     }
 
-    private static void copyDns(PhantomPassProfile contract, BrowserSessionProfile session) {
+    private static void copyDns(PhantoraPassProfile contract, BrowserSessionProfile session) {
         session.dns.policy = contract.dns.policy;
         session.dns.dohTemplate = contract.dns.dohTemplate;
     }
 
-    private static void copyPermissions(PhantomPassProfile contract, BrowserSessionProfile session) {
+    private static void copyPermissions(PhantoraPassProfile contract, BrowserSessionProfile session) {
         session.permissions.geolocation = contract.permissions.geolocation;
         session.permissions.notifications = contract.permissions.notifications;
         session.permissions.extra = contract.permissions.extra == null

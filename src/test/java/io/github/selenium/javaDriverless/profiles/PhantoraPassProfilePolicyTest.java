@@ -10,17 +10,17 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PhantomPassProfilePolicyTest {
+class PhantoraPassProfilePolicyTest {
     @Test
     void acceptsAValidLinuxProfileForPersistenceAndNativeLaunchWithoutMutatingTheCaller() {
-        PhantomPassProfile profile = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile profile = SdkProfilePresets.phantoraPass(
                 SdkProfilePreset.LINUX, "policy-linux", "Policy Linux", "BR");
         String originalPreset = profile.profile.preset;
 
-        PhantomPassPolicyResult persisted =
-                PhantomPassProfilePolicy.evaluateForPersistence(profile);
-        PhantomPassPolicyResult launch = PhantomPassProfilePolicy.evaluateForLaunch(
-                profile, PhantomPassRuntime.NATIVE_HOST);
+        PhantoraPassPolicyResult persisted =
+                PhantoraPassProfilePolicy.evaluateForPersistence(profile);
+        PhantoraPassPolicyResult launch = PhantoraPassProfilePolicy.evaluateForLaunch(
+                profile, PhantoraPassRuntime.NATIVE_HOST);
 
         assertThat(persisted.accepted()).isTrue();
         assertThat(persisted.violations()).isEmpty();
@@ -31,16 +31,16 @@ class PhantomPassProfilePolicyTest {
 
     @Test
     void appliesToTheProvidedChromeOptionsSubclassWithLegacyFactoryEquivalence() {
-        PhantomPassProfile profile = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile profile = SdkProfilePresets.phantoraPass(
                 SdkProfilePreset.LINUX, "policy-apply", "Policy Apply", "BR");
         profile.profile.browser.binaryPath = "/opt/chrome/chrome";
         profile.profile.browser.extraArgs.add("--disable-sync");
         profile.profile.extensionPaths = List.of("relative-extension");
 
-        ChromeOptions legacy = ProfileChromeOptionsFactory.fromPhantomPass(profile);
+        ChromeOptions legacy = ProfileChromeOptionsFactory.fromPhantoraPass(profile);
         ProductChromeOptions supplied = new ProductChromeOptions();
-        ProductChromeOptions applied = ProfileChromeOptionsFactory.applyPhantomPass(
-                profile, PhantomPassRuntime.NATIVE_HOST, supplied);
+        ProductChromeOptions applied = ProfileChromeOptionsFactory.applyPhantoraPass(
+                profile, PhantoraPassRuntime.NATIVE_HOST, supplied);
 
         assertThat(applied).isSameAs(supplied);
         assertThat(applied.getArguments()).containsExactlyElementsOf(legacy.getArguments());
@@ -54,7 +54,7 @@ class PhantomPassProfilePolicyTest {
 
     @Test
     void clearsTransportStateOwnedByAPreviouslyAppliedProfile() {
-        PhantomPassProfile profile = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile profile = SdkProfilePresets.phantoraPass(
                 SdkProfilePreset.LINUX, "policy-clear-transport", "Policy Clear Transport", "BR");
         ProductChromeOptions supplied = new ProductChromeOptions();
         supplied.setProxyConfig(new ProxyConfig(
@@ -65,8 +65,8 @@ class PhantomPassProfilePolicyTest {
         supplied.setEgressInfo(oldEgress);
         supplied.setEgressResolver(proxy -> oldEgress);
 
-        ProductChromeOptions applied = ProfileChromeOptionsFactory.applyPhantomPass(
-                profile, PhantomPassRuntime.NATIVE_HOST, supplied);
+        ProductChromeOptions applied = ProfileChromeOptionsFactory.applyPhantoraPass(
+                profile, PhantoraPassRuntime.NATIVE_HOST, supplied);
 
         assertThat(applied.getProxyConfig()).isNull();
         assertThat(applied.isAuthenticatedProxyBridgeEnabled()).isFalse();
@@ -76,7 +76,7 @@ class PhantomPassProfilePolicyTest {
 
     @Test
     void virtualDisplayAcceptsVariableGeometryOnlyWhenRuntimeMatchesExactly() {
-        PhantomPassProfile profile = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile profile = SdkProfilePresets.phantoraPass(
                 SdkProfilePreset.DOCKER, "policy-display", "Policy Display", "BR");
         var screen = profile.profile.fingerprint.screen;
         screen.width = 1600;
@@ -84,18 +84,18 @@ class PhantomPassProfilePolicyTest {
         screen.availWidth = 1600;
         screen.availHeight = 940;
         screen.deviceScaleFactor = 1.25;
-        PhantomPassRuntime.Geometry exact = new PhantomPassRuntime.Geometry(
+        PhantoraPassRuntime.Geometry exact = new PhantoraPassRuntime.Geometry(
                 1600, 1000, 1600, 940, 24, 24, 1.25);
 
-        assertThat(PhantomPassProfilePolicy.evaluateForPersistence(profile).accepted()).isTrue();
-        assertThat(PhantomPassProfilePolicy.evaluateForLaunch(
-                profile, PhantomPassRuntime.virtualDisplay(exact)).accepted()).isTrue();
+        assertThat(PhantoraPassProfilePolicy.evaluateForPersistence(profile).accepted()).isTrue();
+        assertThat(PhantoraPassProfilePolicy.evaluateForLaunch(
+                profile, PhantoraPassRuntime.virtualDisplay(exact)).accepted()).isTrue();
 
-        PhantomPassPolicyResult mismatch = PhantomPassProfilePolicy.evaluateForLaunch(
+        PhantoraPassPolicyResult mismatch = PhantoraPassProfilePolicy.evaluateForLaunch(
                 profile,
-                PhantomPassRuntime.virtualDisplay(new PhantomPassRuntime.Geometry(
+                PhantoraPassRuntime.virtualDisplay(new PhantoraPassRuntime.Geometry(
                         1601, 1000, 1600, 940, 24, 24, 1.25)));
-        assertThat(mismatch.violations()).containsExactly(new PhantomPassPolicyViolation(
+        assertThat(mismatch.violations()).containsExactly(new PhantoraPassPolicyViolation(
                 "runtime_geometry_mismatch", "fingerprint.screen", "exact virtual-display geometry"));
     }
 
@@ -115,14 +115,14 @@ class PhantomPassProfilePolicyTest {
 
     @Test
     void absolutePathViolationNeverEchoesThePersistedValue() {
-        PhantomPassProfile profile = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile profile = SdkProfilePresets.phantoraPass(
                 SdkProfilePreset.LINUX, "policy-path", "Policy Path", "BR");
         String sensitiveRelativePath = "relative/private-customer-token/chrome";
         profile.profile.browser.binaryPath = sensitiveRelativePath;
 
-        PhantomPassPolicyResult result = PhantomPassProfilePolicy.evaluateForPersistence(profile);
+        PhantoraPassPolicyResult result = PhantoraPassProfilePolicy.evaluateForPersistence(profile);
 
-        assertThat(result.violations()).containsExactly(new PhantomPassPolicyViolation(
+        assertThat(result.violations()).containsExactly(new PhantoraPassPolicyViolation(
                 "absolute_path_required", "profile.browser.binaryPath", "absolute path"));
         assertThat(result.violations().toString()).doesNotContain(sensitiveRelativePath)
                 .doesNotContain("private-customer-token");
@@ -131,14 +131,14 @@ class PhantomPassProfilePolicyTest {
     private static void assertNativeMediaViolation(
             SdkProfilePreset base,
             String field,
-            java.util.function.Consumer<PhantomPassProfile> mutation,
+            java.util.function.Consumer<PhantoraPassProfile> mutation,
             String expected) {
-        PhantomPassProfile profile = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile profile = SdkProfilePresets.phantoraPass(
                 base, "policy-media-" + base.id() + "-" + field, "Policy Media", "BR");
         mutation.accept(profile);
 
-        assertThat(PhantomPassProfilePolicy.evaluateForPersistence(profile).violations())
-                .contains(new PhantomPassPolicyViolation(
+        assertThat(PhantoraPassProfilePolicy.evaluateForPersistence(profile).violations())
+                .contains(new PhantoraPassPolicyViolation(
                         "native_media_required", "profile.fingerprint." + field, expected));
     }
 

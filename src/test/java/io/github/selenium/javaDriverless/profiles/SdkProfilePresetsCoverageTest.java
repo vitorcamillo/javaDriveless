@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import io.github.selenium.javaDriverless.types.BrowserFingerprintProfile;
 
-/** Catálogo público de presets + contrato PhantomPass + helpers legados bet365. */
+/** Catálogo público de presets + contrato PhantoraPass + helpers legados bet365. */
 class SdkProfilePresetsCoverageTest {
 
     @Test
@@ -22,7 +22,7 @@ class SdkProfilePresetsCoverageTest {
         assertTrue(presets.contains(SdkProfilePreset.WINDOWS));
         assertTrue(presets.contains(SdkProfilePreset.LINUX));
         assertTrue(presets.contains(SdkProfilePreset.DOCKER));
-        assertTrue(presets.contains(SdkProfilePreset.PHANTOMPASS));
+        assertTrue(presets.contains(SdkProfilePreset.PHANTORAPASS));
         assertTrue(presets.contains(SdkProfilePreset.SELENIUMLIKE));
     }
 
@@ -52,31 +52,31 @@ class SdkProfilePresetsCoverageTest {
     }
 
     @Test
-    void phantomPassRequiresRuntimeBasePreset() {
+    void phantoraPassRequiresRuntimeBasePreset() {
         assertThrows(IllegalArgumentException.class,
-            () -> SdkProfilePresets.phantomPass(SdkProfilePreset.SELENIUMLIKE, "p1", "P", "BR"));
+            () -> SdkProfilePresets.phantoraPass(SdkProfilePreset.SELENIUMLIKE, "p1", "P", "BR"));
         assertThrows(IllegalArgumentException.class,
-            () -> SdkProfilePresets.phantomPass(null, "p1", "P", "BR"));
+            () -> SdkProfilePresets.phantoraPass(null, "p1", "P", "BR"));
     }
 
     @Test
-    void phantomPassBuildsEditableContractOverRuntimeBase() {
-        PhantomPassProfile contract =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.WINDOWS, "pp-1", "PP", "BR");
+    void phantoraPassBuildsEditableContractOverRuntimeBase() {
+        PhantoraPassProfile contract =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.WINDOWS, "pp-1", "PP", "BR");
 
         assertEquals(SdkProfilePreset.WINDOWS, contract.runtimeBase);
-        assertEquals("phantompass", contract.profile.preset);
+        assertEquals("phantorapass", contract.profile.preset);
         assertEquals("pp-1", contract.profile.id);
-        assertTrue(contract.profile.metadata.tags.contains("preset:phantompass"));
+        assertTrue(contract.profile.metadata.tags.contains("preset:phantorapass"));
         assertTrue(contract.profile.metadata.tags.contains("runtime-base:windows"));
-        assertTrue(contract.profile.runtimeSurfaces.contains("phantompass-configurable"));
+        assertTrue(contract.profile.runtimeSurfaces.contains("phantorapass-configurable"));
         assertEquals("BR", contract.location.countryCode);
     }
 
     @Test
-    void phantomPassNormalizesNullCountryToEmpty() {
-        PhantomPassProfile contract =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "pp-2", "PP", null);
+    void phantoraPassNormalizesNullCountryToEmpty() {
+        PhantoraPassProfile contract =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "pp-2", "PP", null);
 
         assertEquals("", contract.location.countryCode);
     }

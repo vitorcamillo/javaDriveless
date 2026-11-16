@@ -531,14 +531,14 @@ abstract class StealthFingerprintBrowserIdentityChecks {
                 'cdc_adoQpoasnfa76pfcZLmcfl_Symbol','$chrome_asyncScriptInfo',
                 '__webdriver_script_function','__selenium_evaluate','__webdriver_evaluate',
                 'selenium','webdriver','__nightmare','__detect_nightmare',
-                '__phantompass_','__java_driverless_'];
+                '__phantorapass_','__java_driverless_'];
               for (var i=0; i<suspects.length; i++) {
                 if (typeof window[suspects[i]] !== 'undefined') leaks.push(suspects[i]);
               }
               // Scan ALL window keys for automation markers
               for (var key of Object.getOwnPropertyNames(window)) {
                 if (key.startsWith('cdc_') || key.startsWith('__selenium') || key.startsWith('__webdriver')
-                    || key.startsWith('__phantompass') || key.startsWith('__java_driverless')) {
+                    || key.startsWith('__phantorapass') || key.startsWith('__java_driverless')) {
                   if (leaks.indexOf(key) === -1) leaks.push(key);
                 }
               }

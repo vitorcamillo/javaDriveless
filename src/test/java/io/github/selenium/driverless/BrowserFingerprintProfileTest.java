@@ -195,7 +195,7 @@ class BrowserFingerprintProfileTest {
                 "maxTouchPoints":2,"doNotTrack":true,
                 "screen":{"width":1366,"height":768,"availWidth":1366,"availHeight":728,
                 "colorDepth":30,"pixelDepth":30},
-                "webgl":{"mode":"spoof","vendor":"Phantom Vendor","renderer":"Phantom Renderer"},
+                "webgl":{"mode":"spoof","vendor":"Phantora Vendor","renderer":"Phantora Renderer"},
                 "speech":{"mode":"auto","voices":[{"name":"Portuguese Brazil","lang":"pt-BR",
                 "voiceURI":"Portuguese Brazil","localService":true,"isDefault":true}]},
                 "canvas":{"mode":"noise","noise":0.01},
@@ -240,7 +240,7 @@ class BrowserFingerprintProfileTest {
 
         scripts.forEach(script -> {
             assertFalse(script.contains("Symbol.for("), "script não deve registrar Symbol global");
-            assertFalse(script.contains("__phantompass_"), "script não deve expor marcador PhantomPass");
+            assertFalse(script.contains("__phantorapass_"), "script não deve expor marcador PhantoraPass");
         });
     }
 

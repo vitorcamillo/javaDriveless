@@ -5,7 +5,7 @@ suíte padrão de mapeamento de fingerprint. O objetivo é isolar o que difere d
 funcional com Selenium/Chrome sem remover proteções globalmente.
 
 Esses arquivos JSON são exemplos de validação, e não predefinições públicas adicionais. O catálogo do SDK público
-se limita a `windows`, `linux`, `docker`, `phantompass` e `seleniumlike`. As variantes JSON do CreepJS, PixelScan
+se limita a `windows`, `linux`, `docker`, `phantorapass` e `seleniumlike`. As variantes JSON do CreepJS, PixelScan
 e IPhey permanecem aqui apenas para permitir a reprodução dos contratos mapeados.
 
 ## Comparar uma URL
@@ -134,7 +134,7 @@ perfis de cliente compartilharem cookies nem exponha o debugger. `minimal-cdp` t
 Para `minimal-cdp`, não use este comando headless puro. Use o launcher visível do Xvfb
 documentado abaixo.
 
-### Política sem wrappers para perfis PhantomPass/SDK
+### Política sem wrappers para perfis PhantoraPass/SDK
 
 Perfis personalizados antigos e persistidos continuam legíveis com sua política legada, mas todos
 os novos presets oficiais Windows/Linux/Docker são fixados em `minimal-cdp`. O gerador aceita
@@ -149,11 +149,11 @@ SdkProfile profile = SdkProfilePresets.linux(
 Para o adaptador SaaS:
 
 ```java
-PhantomPassProfile contract = SdkProfilePresets.phantomPass(
+PhantoraPassProfile contract = SdkProfilePresets.phantoraPass(
         SdkProfilePreset.LINUX, "account-123", "Account 123", "BR");
 contract.proxy = runtimeProxy;
 contract.egressInfo = knownEgress;
-ChromeOptions options = ProfileChromeOptionsFactory.fromPhantomPass(contract);
+ChromeOptions options = ProfileChromeOptionsFactory.fromPhantoraPass(contract);
 ```
 
 `minimal-cdp` rejeita `diversityEnabled=true` porque o ruído de canvas/áudio/DOMRect/WebGL exige
@@ -169,7 +169,7 @@ O attach de compatibilidade continua disponível com `legacy-spoof` e preserva o
 
 | Runtime | estado de `minimal-cdp` | Evidência e operação exigida |
 | --- | --- | --- |
-| Windows, Chrome visível | Contrato suportado; gate live preparado | O runner Windows é necessário para validar os presets `windows` e `phantompass` na página, no DedicatedWorker, no popup `rel=noopener` e no worker do popup. Este checkout Linux apenas compila/pula esse gate; não classifique o caminho como validado ao vivo até o job Windows passar. |
+| Windows, Chrome visível | Contrato suportado; gate live preparado | O runner Windows é necessário para validar os presets `windows` e `phantorapass` na página, no DedicatedWorker, no popup `rel=noopener` e no worker do popup. Este checkout Linux apenas compila/pula esse gate; não classifique o caminho como validado ao vivo até o job Windows passar. |
 | Linux, Chrome visível | Baseline suportado | O Chrome 150 bruto retornou a mesma UA clássica nativa e UA-CH completa de alta entropia na página, no DedicatedWorker e no SharedWorker. Mantenha o perfil no sistema operacional/arquitetura Linux nativos. |
 | Docker, Chrome visível sob Xvfb | Caminho de servidor validado | A captura CreepJS Docker/Xvfb produziu 16/16 campos obrigatórios, 24/24 correspondências esperadas e 0 mentiras reportadas. As 24 comparações incluem nove campos WebGL do realm principal e paridade exata da GPU entre página e worker. Um teste live separado com dois processos exigiu UA-CH e WebGL completos e iguais na página, DedicatedWorker, SharedWorker, ServiceWorker e no primeiro statement do ServiceWorker, além de `navigator.webdriver=false` nas duas páginas. Este é o caminho canônico sem UI física. |
 | Linux ou Docker, Chrome headless puro | Rejeitado em fail-closed | O Chrome bruto expôs `HeadlessChrome` e SwiftShader. Ocultar o token clássico não preservou uma identidade UA-CH completa no worker. |

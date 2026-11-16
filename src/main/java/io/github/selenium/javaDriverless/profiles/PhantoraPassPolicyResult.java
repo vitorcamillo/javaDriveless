@@ -2,14 +2,14 @@ package io.github.selenium.javaDriverless.profiles;
 
 import java.util.List;
 
-/** Immutable verdict returned by the PhantomPass policy boundary. */
-public final class PhantomPassPolicyResult {
-    private final PhantomPassProfile evaluatedProfile;
-    private final List<PhantomPassPolicyViolation> violations;
+/** Immutable verdict returned by the PhantoraPass policy boundary. */
+public final class PhantoraPassPolicyResult {
+    private final PhantoraPassProfile evaluatedProfile;
+    private final List<PhantoraPassPolicyViolation> violations;
 
-    PhantomPassPolicyResult(
-            PhantomPassProfile evaluatedProfile,
-            List<PhantomPassPolicyViolation> violations) {
+    PhantoraPassPolicyResult(
+            PhantoraPassProfile evaluatedProfile,
+            List<PhantoraPassPolicyViolation> violations) {
         this.evaluatedProfile = evaluatedProfile;
         this.violations = List.copyOf(violations);
     }
@@ -18,21 +18,21 @@ public final class PhantomPassPolicyResult {
         return violations.isEmpty();
     }
 
-    public List<PhantomPassPolicyViolation> violations() {
+    public List<PhantoraPassPolicyViolation> violations() {
         return violations;
     }
 
-    public PhantomPassProfile evaluatedProfile() {
+    public PhantoraPassProfile evaluatedProfile() {
         return evaluatedProfile == null ? null : evaluatedProfile.copy();
     }
 
-    PhantomPassProfile requireAcceptedProfile() {
+    PhantoraPassProfile requireAcceptedProfile() {
         if (!accepted()) {
             String summary = violations.stream()
                     .map(violation -> violation.code() + "[" + violation.field()
                             + ": expected " + violation.expected() + "]")
                     .collect(java.util.stream.Collectors.joining("; "));
-            throw new IllegalArgumentException("PhantomPass policy rejected: " + summary);
+            throw new IllegalArgumentException("PhantoraPass policy rejected: " + summary);
         }
         return evaluatedProfile.copy();
     }

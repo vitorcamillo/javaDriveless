@@ -14,7 +14,7 @@ import io.github.selenium.javaDriverless.types.ProxyConfig.ProxyType;
 
 /**
  * Bordas da ProfileChromeOptionsFactory: guards de entrada, runtime default do
- * PhantomPass, precedência de proxy e propagação de sessão/egress.
+ * PhantoraPass, precedência de proxy e propagação de sessão/egress.
  */
 class ProfileChromeOptionsFactoryEdgesTest {
 
@@ -31,25 +31,25 @@ class ProfileChromeOptionsFactoryEdgesTest {
     }
 
     @Test
-    void applyPhantomPassRejectsNullOptionsBeforeTouchingPolicy() {
-        PhantomPassProfile contract =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "e2", "Edge", "BR");
+    void applyPhantoraPassRejectsNullOptionsBeforeTouchingPolicy() {
+        PhantoraPassProfile contract =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "e2", "Edge", "BR");
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-            () -> ProfileChromeOptionsFactory.applyPhantomPass(
-                contract, PhantomPassRuntime.NATIVE_HOST, null));
+            () -> ProfileChromeOptionsFactory.applyPhantoraPass(
+                contract, PhantoraPassRuntime.NATIVE_HOST, null));
         assertTrue(thrown.getMessage().contains("não pode ser nulo"));
     }
 
     @Test
-    void applyPhantomPassRejectsContractThatFailsPolicy() {
-        PhantomPassProfile invalid =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "e3", "Edge", "BR");
+    void applyPhantoraPassRejectsContractThatFailsPolicy() {
+        PhantoraPassProfile invalid =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "e3", "Edge", "BR");
         invalid.profile.browser.headless = true;
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-            () -> ProfileChromeOptionsFactory.applyPhantomPass(
-                invalid, PhantomPassRuntime.NATIVE_HOST, new ChromeOptions()));
+            () -> ProfileChromeOptionsFactory.applyPhantoraPass(
+                invalid, PhantoraPassRuntime.NATIVE_HOST, new ChromeOptions()));
         assertTrue(thrown.getMessage().contains("policy rejected"), thrown.getMessage());
         assertTrue(thrown.getMessage().contains("headless_not_supported"), thrown.getMessage());
     }
@@ -84,33 +84,33 @@ class ProfileChromeOptionsFactoryEdgesTest {
     }
 
     @Test
-    void defaultPhantomPassRuntimePrefersNativeHostExceptForDockerWithScreen() {
+    void defaultPhantoraPassRuntimePrefersNativeHostExceptForDockerWithScreen() {
         // LINUX -> NATIVE_HOST; contrato completo aplica e devolve options com sessão
-        PhantomPassProfile linux =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "e7", "Edge", "BR");
-        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantomPass(linux);
+        PhantoraPassProfile linux =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "e7", "Edge", "BR");
+        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantoraPass(linux);
         assertNotNull(options.getSessionProfile());
         assertNull(options.getSessionProfile().proxy);
 
         // DOCKER sem screen (fingerprint anulado) -> VIRTUAL_DISPLAY default
-        PhantomPassProfile dockerNoScreen =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.DOCKER, "e8", "Edge", "BR");
+        PhantoraPassProfile dockerNoScreen =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.DOCKER, "e8", "Edge", "BR");
         dockerNoScreen.profile.fingerprint.screen = null;
         // política exige screen para docker: apply deve reprovar por screen ausente
         assertThrows(IllegalArgumentException.class,
-            () -> ProfileChromeOptionsFactory.fromPhantomPass(dockerNoScreen));
+            () -> ProfileChromeOptionsFactory.fromPhantoraPass(dockerNoScreen));
     }
 
     @Test
     void contractProxyHasPrecedenceOverRuntimeProxy() {
-        PhantomPassProfile withContractProxy =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "e9", "Edge", "BR");
+        PhantoraPassProfile withContractProxy =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "e9", "Edge", "BR");
         ProxyConfig contractProxy =
             new ProxyConfig("10.0.0.99", 3128, ProxyType.HTTP, "contrato", "senha");
         withContractProxy.proxy = contractProxy;
 
         ChromeOptions options =
-            ProfileChromeOptionsFactory.fromPhantomPass(withContractProxy);
+            ProfileChromeOptionsFactory.fromPhantoraPass(withContractProxy);
 
         assertNotNull(options.getSessionProfile().proxy);
         assertEquals("10.0.0.99", options.getSessionProfile().proxy.getHost());
@@ -121,14 +121,14 @@ class ProfileChromeOptionsFactoryEdgesTest {
 
     @Test
     void runtimeProxyIsConvertedWhenContractHasNone() {
-        PhantomPassProfile contract =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "e10", "Edge", "BR");
+        PhantoraPassProfile contract =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "e10", "Edge", "BR");
         contract.profile.proxy = new SdkProfileProxy();
         contract.profile.proxy.host = "10.0.0.7";
         contract.profile.proxy.port = 8080;
         contract.profile.proxy.type = ProxyType.HTTP;
 
-        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantomPass(contract);
+        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantoraPass(contract);
 
         assertNotNull(options.getSessionProfile().proxy);
         assertEquals("10.0.0.7", options.getSessionProfile().proxy.getHost());
@@ -137,15 +137,15 @@ class ProfileChromeOptionsFactoryEdgesTest {
 
     @Test
     void sessionCarriesLocationDnsAndPermissionsFromContract() {
-        PhantomPassProfile contract =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "e11", "Edge", "PT");
+        PhantoraPassProfile contract =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "e11", "Edge", "PT");
         contract.location.region = "Lisboa";
         contract.location.city = "Lisboa";
         contract.dns.policy = "secure-doh";
         contract.dns.dohTemplate = "https://dns.example/dns-query";
         contract.permissions.geolocation = "allow";
 
-        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantomPass(contract);
+        ChromeOptions options = ProfileChromeOptionsFactory.fromPhantoraPass(contract);
         var session = options.getSessionProfile();
 
         assertEquals("PT", session.location.countryCode);
@@ -157,13 +157,13 @@ class ProfileChromeOptionsFactoryEdgesTest {
 
     @Test
     void egressStateFromContractOverridesPreviousOptionsState() {
-        PhantomPassProfile contract =
-            SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "e12", "Edge", "BR");
+        PhantoraPassProfile contract =
+            SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "e12", "Edge", "BR");
 
         ChromeOptions reused = new ChromeOptions();
         // options que já serviram outro tenant: ausência no contrato deve limpar egress
-        ProfileChromeOptionsFactory.applyPhantomPass(
-            contract, PhantomPassRuntime.NATIVE_HOST, reused);
+        ProfileChromeOptionsFactory.applyPhantoraPass(
+            contract, PhantoraPassRuntime.NATIVE_HOST, reused);
 
         assertNull(reused.getEgressInfo());
     }

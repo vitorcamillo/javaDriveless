@@ -4,7 +4,7 @@ public class SdkProfilePresetRequest {
     public String id;
     public String name;
     public String countryCode = "US";
-    /** Canonical preset: windows, linux, docker, phantompass or seleniumlike. */
+    /** Canonical preset: windows, linux, docker, phantorapass or seleniumlike. */
     public String preset = "";
     /** @deprecated use {@link #preset}; retained for source/JSON migration only. */
     @Deprecated

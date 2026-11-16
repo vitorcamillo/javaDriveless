@@ -1,8 +1,8 @@
 package io.github.selenium.javaDriverless.profiles;
 
-/** A redacted, machine-readable PhantomPass policy failure. */
-public record PhantomPassPolicyViolation(String code, String field, String expected) {
-    public PhantomPassPolicyViolation {
+/** A redacted, machine-readable PhantoraPass policy failure. */
+public record PhantoraPassPolicyViolation(String code, String field, String expected) {
+    public PhantoraPassPolicyViolation {
         code = requireText(code, "code");
         field = requireText(field, "field");
         expected = requireText(expected, "expected");

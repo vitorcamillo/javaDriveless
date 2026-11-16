@@ -10,56 +10,56 @@ import java.util.List;
 import java.util.Locale;
 
 /** Single policy boundary shared by persistence and launch adapters. */
-public final class PhantomPassProfilePolicy {
-    private PhantomPassProfilePolicy() {
+public final class PhantoraPassProfilePolicy {
+    private PhantoraPassProfilePolicy() {
     }
 
-    public static PhantomPassPolicyResult evaluateForPersistence(PhantomPassProfile source) {
+    public static PhantoraPassPolicyResult evaluateForPersistence(PhantoraPassProfile source) {
         return evaluate(source, null, false);
     }
 
-    public static PhantomPassPolicyResult evaluateForLaunch(
-            PhantomPassProfile source,
-            PhantomPassRuntime runtime) {
+    public static PhantoraPassPolicyResult evaluateForLaunch(
+            PhantoraPassProfile source,
+            PhantoraPassRuntime runtime) {
         return evaluate(source, runtime, true);
     }
 
-    private static PhantomPassPolicyResult evaluate(
-            PhantomPassProfile source,
-            PhantomPassRuntime runtime,
+    private static PhantoraPassPolicyResult evaluate(
+            PhantoraPassProfile source,
+            PhantoraPassRuntime runtime,
             boolean launch) {
-        List<PhantomPassPolicyViolation> violations = new ArrayList<>();
+        List<PhantoraPassPolicyViolation> violations = new ArrayList<>();
         if (source == null || source.profile == null) {
-            violations.add(new PhantomPassPolicyViolation(
-                    "profile_required", "profile", "non-null PhantomPass profile"));
-            return new PhantomPassPolicyResult(null, violations);
+            violations.add(new PhantoraPassPolicyViolation(
+                    "profile_required", "profile", "non-null PhantoraPass profile"));
+            return new PhantoraPassPolicyResult(null, violations);
         }
-        PhantomPassProfile candidate = source.copy();
+        PhantoraPassProfile candidate = source.copy();
         if (candidate.runtimeBase == null || !candidate.runtimeBase.isRuntimeBase()) {
-            violations.add(new PhantomPassPolicyViolation(
+            violations.add(new PhantoraPassPolicyViolation(
                     "runtime_base_required", "runtimeBase", "windows|linux|docker"));
         }
         try {
             candidate.profile.applyDefaults();
         } catch (IllegalArgumentException invalid) {
-            violations.add(new PhantomPassPolicyViolation(
+            violations.add(new PhantoraPassPolicyViolation(
                     "profile_defaults_invalid", "profile", "valid normalized profile"));
         }
         if (violations.stream().noneMatch(v -> "profile_defaults_invalid".equals(v.code()))) {
             evaluatePersistableContract(candidate, violations);
         }
         if (launch && runtime == null) {
-            violations.add(new PhantomPassPolicyViolation(
+            violations.add(new PhantoraPassPolicyViolation(
                     "runtime_required", "runtime", "NATIVE_HOST|VIRTUAL_DISPLAY"));
         } else if (launch) {
             evaluateRuntime(candidate, runtime, violations);
         }
-        return new PhantomPassPolicyResult(candidate, violations);
+        return new PhantoraPassPolicyResult(candidate, violations);
     }
 
     private static void evaluatePersistableContract(
-            PhantomPassProfile candidate,
-            List<PhantomPassPolicyViolation> violations) {
+            PhantoraPassProfile candidate,
+            List<PhantoraPassPolicyViolation> violations) {
         SdkProfile profile = candidate.profile;
         BrowserFingerprintProfile fingerprint = profile.fingerprint;
         if (profile.browser.headless) {
@@ -106,7 +106,7 @@ public final class PhantomPassProfilePolicy {
     private static void evaluateIdentity(
             SdkProfilePreset runtimeBase,
             BrowserFingerprintProfile fingerprint,
-            List<PhantomPassPolicyViolation> violations) {
+            List<PhantoraPassPolicyViolation> violations) {
         if (runtimeBase == null || !runtimeBase.isRuntimeBase()) return;
         String expectedUa = runtimeBase == SdkProfilePreset.WINDOWS ? "Windows" : "Linux";
         String expectedPlatform = runtimeBase == SdkProfilePreset.WINDOWS ? "Win32" : "Linux x86_64";
@@ -128,7 +128,7 @@ public final class PhantomPassProfilePolicy {
     private static void evaluateScreen(
             SdkProfilePreset runtimeBase,
             SdkProfile profile,
-            List<PhantomPassPolicyViolation> violations) {
+            List<PhantoraPassPolicyViolation> violations) {
         if (runtimeBase == null || !runtimeBase.isRuntimeBase()) return;
         String mode = text(profile.fingerprint.screen.mode).toLowerCase(Locale.ROOT);
         if (runtimeBase == SdkProfilePreset.WINDOWS && !"real".equals(mode)) {
@@ -156,7 +156,7 @@ public final class PhantomPassProfilePolicy {
     private static void evaluateNativeLinuxMedia(
             SdkProfilePreset runtimeBase,
             BrowserFingerprintProfile fingerprint,
-            List<PhantomPassPolicyViolation> violations) {
+            List<PhantoraPassPolicyViolation> violations) {
         if (runtimeBase != SdkProfilePreset.LINUX && runtimeBase != SdkProfilePreset.DOCKER) return;
         requireExactMedia(violations, "prefersReducedMotion", fingerprint.prefersReducedMotion, "no-preference");
         requireExactMedia(violations, "prefersReducedTransparency", fingerprint.prefersReducedTransparency, "no-preference");
@@ -165,10 +165,10 @@ public final class PhantomPassProfilePolicy {
     }
 
     private static void evaluateRuntime(
-            PhantomPassProfile candidate,
-            PhantomPassRuntime runtime,
-            List<PhantomPassPolicyViolation> violations) {
-        if (runtime.kind() == PhantomPassRuntime.Kind.NATIVE_HOST) {
+            PhantoraPassProfile candidate,
+            PhantoraPassRuntime runtime,
+            List<PhantoraPassPolicyViolation> violations) {
+        if (runtime.kind() == PhantoraPassRuntime.Kind.NATIVE_HOST) {
             if (candidate.runtimeBase == SdkProfilePreset.DOCKER) {
                 add(violations, "runtime_kind_mismatch", "runtime.kind", "VIRTUAL_DISPLAY");
             }
@@ -196,7 +196,7 @@ public final class PhantomPassProfilePolicy {
 
     private static void evaluateProcessArguments(
             List<String> arguments,
-            List<PhantomPassPolicyViolation> violations) {
+            List<PhantoraPassPolicyViolation> violations) {
         try {
             MinimalCdpProcessArgumentPolicy.requireSafe(arguments);
         } catch (IllegalArgumentException unsafe) {
@@ -212,7 +212,7 @@ public final class PhantomPassProfilePolicy {
     }
 
     private static void requireNativeSurface(
-            List<PhantomPassPolicyViolation> violations,
+            List<PhantoraPassPolicyViolation> violations,
             String field,
             String value) {
         if (!"real".equalsIgnoreCase(text(value))) {
@@ -221,7 +221,7 @@ public final class PhantomPassProfilePolicy {
     }
 
     private static void requireExactMedia(
-            List<PhantomPassPolicyViolation> violations,
+            List<PhantoraPassPolicyViolation> violations,
             String name,
             String value,
             String expected) {
@@ -233,7 +233,7 @@ public final class PhantomPassProfilePolicy {
     private static void requireAbsolutePath(
             String value,
             String field,
-            List<PhantomPassPolicyViolation> violations) {
+            List<PhantoraPassPolicyViolation> violations) {
         if (!hasText(value)) return;
         try {
             if (!Path.of(value).isAbsolute()) {
@@ -244,13 +244,13 @@ public final class PhantomPassProfilePolicy {
         }
     }
 
-    private static PhantomPassRuntime.Geometry geometry(BrowserFingerprintProfile.Screen screen) {
-        return new PhantomPassRuntime.Geometry(
+    private static PhantoraPassRuntime.Geometry geometry(BrowserFingerprintProfile.Screen screen) {
+        return new PhantoraPassRuntime.Geometry(
                 screen.width, screen.height, screen.availWidth, screen.availHeight,
                 screen.colorDepth, screen.pixelDepth, screen.deviceScaleFactor);
     }
 
-    private static boolean validGeometry(PhantomPassRuntime.Geometry geometry) {
+    private static boolean validGeometry(PhantoraPassRuntime.Geometry geometry) {
         return geometry != null
                 && geometry.width() > 0 && geometry.height() > 0
                 && geometry.availWidth() > 0 && geometry.availHeight() > 0
@@ -262,8 +262,8 @@ public final class PhantomPassProfilePolicy {
     }
 
     private static boolean sameGeometry(
-            PhantomPassRuntime.Geometry left,
-            PhantomPassRuntime.Geometry right) {
+            PhantoraPassRuntime.Geometry left,
+            PhantoraPassRuntime.Geometry right) {
         return left.width() == right.width()
                 && left.height() == right.height()
                 && left.availWidth() == right.availWidth()
@@ -281,11 +281,11 @@ public final class PhantomPassProfilePolicy {
     }
 
     private static void add(
-            List<PhantomPassPolicyViolation> violations,
+            List<PhantoraPassPolicyViolation> violations,
             String code,
             String field,
             String expected) {
-        PhantomPassPolicyViolation violation = new PhantomPassPolicyViolation(code, field, expected);
+        PhantoraPassPolicyViolation violation = new PhantoraPassPolicyViolation(code, field, expected);
         if (!violations.contains(violation)) violations.add(violation);
     }
 

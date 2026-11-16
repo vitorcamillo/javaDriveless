@@ -84,7 +84,7 @@ abstract class ChromeSessionCore extends ChromeSessionState implements AutoClose
                 // Verificar primeira execução
                 Utils.isFirstRun().join();
 
-                // ATTACH MODE: o usuário forneceu um debugger_address (Chrome externo, ex.: PhantomPass).
+                // ATTACH MODE: o usuário forneceu um debugger_address (Chrome externo, ex.: PhantoraPass).
                 // Capturar ANTES de a lib setar o próprio endereço ao lançar o Chrome (abaixo) — senão
                 // launch mode também ficaria com debuggerAddress != null e o spoof seria pulado.
                 // Configurar porta de debug se não especificada
@@ -348,7 +348,7 @@ abstract class ChromeSessionCore extends ChromeSessionState implements AutoClose
                     currentContext = defaultContext;
                 }
 
-                // Em ATTACH MODE (debugger_address), o Chrome é gerido externamente (ex.: PhantomPass)
+                // Em ATTACH MODE (debugger_address), o Chrome é gerido externamente (ex.: PhantoraPass)
                 // e já tem identidade/fingerprint próprios — NÃO aplicar o spoof da lib por cima
                 // (evita conflito/double-spoof). O spoof (CDP overrides + surface script + worker
                 // auto-attach) só roda quando a própria lib lança o Chrome.

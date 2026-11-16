@@ -11,21 +11,21 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Bateria de violações da PhantomPassProfilePolicy: cada regra do contrato
+ * Bateria de violações da PhantoraPassProfilePolicy: cada regra do contrato
  * persistável e de runtime acionada isoladamente por mutação da base válida.
  */
-class PhantomPassProfilePolicyViolationsTest {
+class PhantoraPassProfilePolicyViolationsTest {
 
-    private static PhantomPassProfile linuxBase() {
-        return SdkProfilePresets.phantomPass(SdkProfilePreset.LINUX, "pol", "Política", "BR");
+    private static PhantoraPassProfile linuxBase() {
+        return SdkProfilePresets.phantoraPass(SdkProfilePreset.LINUX, "pol", "Política", "BR");
     }
 
-    private static List<String> codes(PhantomPassPolicyResult result) {
-        return result.violations().stream().map(PhantomPassPolicyViolation::code).toList();
+    private static List<String> codes(PhantoraPassPolicyResult result) {
+        return result.violations().stream().map(PhantoraPassPolicyViolation::code).toList();
     }
 
     private static void assertSingleViolation(
-            PhantomPassPolicyResult result, String expectedCode) {
+            PhantoraPassPolicyResult result, String expectedCode) {
         List<String> codes = codes(result);
         assertTrue(codes.contains(expectedCode),
             "esperava " + expectedCode + " em " + codes);
@@ -33,7 +33,7 @@ class PhantomPassProfilePolicyViolationsTest {
 
     @Test
     void nullProfileIsRejectedUpFront() {
-        PhantomPassPolicyResult result = PhantomPassProfilePolicy.evaluateForPersistence(null);
+        PhantoraPassPolicyResult result = PhantoraPassProfilePolicy.evaluateForPersistence(null);
         assertFalse(result.accepted());
         assertNull(result.evaluatedProfile());
         assertEquals(List.of("profile_required"), codes(result));
@@ -41,21 +41,21 @@ class PhantomPassProfilePolicyViolationsTest {
 
     @Test
     void nonRuntimeBaseIsRejected() {
-        PhantomPassProfile profile = linuxBase();
+        PhantoraPassProfile profile = linuxBase();
         profile.runtimeBase = SdkProfilePreset.SELENIUMLIKE;
 
-        PhantomPassPolicyResult result =
-            PhantomPassProfilePolicy.evaluateForPersistence(profile);
+        PhantoraPassPolicyResult result =
+            PhantoraPassProfilePolicy.evaluateForPersistence(profile);
         assertSingleViolation(result, "runtime_base_required");
     }
 
     @Test
     void invalidDefaultsShortCircuitPersistableContract() {
-        PhantomPassProfile profile = linuxBase();
+        PhantoraPassProfile profile = linuxBase();
         profile.profile.fingerprint.colorScheme = "sepia";
 
-        PhantomPassPolicyResult result =
-            PhantomPassProfilePolicy.evaluateForPersistence(profile);
+        PhantoraPassPolicyResult result =
+            PhantoraPassProfilePolicy.evaluateForPersistence(profile);
         assertSingleViolation(result, "profile_defaults_invalid");
         // contrato persistável não roda: sem codes de superfície
         assertFalse(codes(result).contains("native_surface_required"));
@@ -63,35 +63,35 @@ class PhantomPassProfilePolicyViolationsTest {
 
     @Test
     void headlessFlagAndArgumentAreBothRejected() {
-        PhantomPassProfile flag = linuxBase();
+        PhantoraPassProfile flag = linuxBase();
         flag.profile.browser.headless = true;
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(flag), "headless_not_supported");
+            PhantoraPassProfilePolicy.evaluateForPersistence(flag), "headless_not_supported");
 
-        PhantomPassProfile arg = linuxBase();
+        PhantoraPassProfile arg = linuxBase();
         arg.profile.browser.extraArgs = List.of("--headless=new");
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(arg), "headless_not_supported");
+            PhantoraPassProfilePolicy.evaluateForPersistence(arg), "headless_not_supported");
     }
 
     @Test
     void customUserAgentIsRejectedInFavorOfNative() {
-        PhantomPassProfile profile = linuxBase();
+        PhantoraPassProfile profile = linuxBase();
         profile.profile.browser.userAgent = "Mozilla/5.0 (customizado)";
 
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(profile),
+            PhantoraPassProfilePolicy.evaluateForPersistence(profile),
             "native_user_agent_required");
     }
 
     @Test
     void legacySpoofRuntimePolicyIsRejected() {
-        PhantomPassProfile profile = linuxBase();
+        PhantoraPassProfile profile = linuxBase();
         profile.profile.fingerprint.runtimePolicy =
             BrowserFingerprintProfile_LEGACY();
 
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(profile), "runtime_policy_required");
+            PhantoraPassProfilePolicy.evaluateForPersistence(profile), "runtime_policy_required");
     }
 
     private static String BrowserFingerprintProfile_LEGACY() {
@@ -101,12 +101,12 @@ class PhantomPassProfilePolicyViolationsTest {
 
     @Test
     void runtimeIdentityMismatchIsReportedWithUnsupportedWindowsNote() {
-        PhantomPassProfile profile = linuxBase();
+        PhantoraPassProfile profile = linuxBase();
         profile.profile.fingerprint.platform = "Win32";
         profile.profile.fingerprint.uaPlatform = "Windows";
 
-        PhantomPassPolicyResult result =
-            PhantomPassProfilePolicy.evaluateForPersistence(profile);
+        PhantoraPassPolicyResult result =
+            PhantoraPassProfilePolicy.evaluateForPersistence(profile);
         assertSingleViolation(result, "runtime_identity_mismatch");
         String expected = result.violations().stream()
             .filter(v -> "runtime_identity_mismatch".equals(v.code())).findFirst().orElseThrow()
@@ -116,163 +116,163 @@ class PhantomPassProfilePolicyViolationsTest {
 
     @Test
     void nonDesktopIdentityIsRejected() {
-        PhantomPassProfile mobile = linuxBase();
+        PhantoraPassProfile mobile = linuxBase();
         mobile.profile.fingerprint.mobile = true;
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(mobile), "desktop_identity_required");
+            PhantoraPassProfilePolicy.evaluateForPersistence(mobile), "desktop_identity_required");
 
-        PhantomPassProfile arm = linuxBase();
+        PhantoraPassProfile arm = linuxBase();
         arm.profile.fingerprint.architecture = "arm";
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(arm), "desktop_identity_required");
+            PhantoraPassProfilePolicy.evaluateForPersistence(arm), "desktop_identity_required");
 
-        PhantomPassProfile model = linuxBase();
+        PhantoraPassProfile model = linuxBase();
         model.profile.fingerprint.model = "Pixel 8";
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(model), "desktop_identity_required");
+            PhantoraPassProfilePolicy.evaluateForPersistence(model), "desktop_identity_required");
     }
 
     @Test
     void syntheticSurfacesAndSpeechAreRejected() {
-        PhantomPassProfile webgl = linuxBase();
+        PhantoraPassProfile webgl = linuxBase();
         webgl.profile.fingerprint.webgl.mode = "spoof";
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(webgl), "native_surface_required");
+            PhantoraPassProfilePolicy.evaluateForPersistence(webgl), "native_surface_required");
 
-        PhantomPassProfile speech = linuxBase();
+        PhantoraPassProfile speech = linuxBase();
         speech.profile.fingerprint.speech.mode = "synthetic";
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(speech), "native_surface_required");
+            PhantoraPassProfilePolicy.evaluateForPersistence(speech), "native_surface_required");
     }
 
     @Test
     void permissiveWebRtcPolicyIsRejected() {
-        PhantomPassProfile profile = linuxBase();
+        PhantoraPassProfile profile = linuxBase();
         profile.profile.fingerprint.webRtc.mode = "real";
 
-        PhantomPassPolicyResult result =
-            PhantomPassProfilePolicy.evaluateForPersistence(profile);
+        PhantoraPassPolicyResult result =
+            PhantoraPassProfilePolicy.evaluateForPersistence(profile);
         assertSingleViolation(result, "webrtc_policy_required");
     }
 
     @Test
     void syntheticGraphicsArgumentsAreRejected() {
-        PhantomPassProfile swift = linuxBase();
+        PhantoraPassProfile swift = linuxBase();
         swift.profile.browser.extraArgs = List.of("--use-gl=swiftshader");
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(swift),
+            PhantoraPassProfilePolicy.evaluateForPersistence(swift),
             "synthetic_graphics_rejected");
 
-        PhantomPassProfile noGpu = linuxBase();
+        PhantoraPassProfile noGpu = linuxBase();
         noGpu.profile.browser.extraArgs = List.of("--disable-gpu");
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(noGpu),
+            PhantoraPassProfilePolicy.evaluateForPersistence(noGpu),
             "synthetic_graphics_rejected");
     }
 
     @Test
     void absolutePathRuleFlagsRelativeAndInvalidPaths() {
-        PhantomPassProfile relative = linuxBase();
+        PhantoraPassProfile relative = linuxBase();
         relative.profile.browser.binaryPath = "chrome-relativo";
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(relative),
+            PhantoraPassProfilePolicy.evaluateForPersistence(relative),
             "absolute_path_required");
 
-        PhantomPassProfile invalid = linuxBase();
+        PhantoraPassProfile invalid = linuxBase();
         invalid.profile.storage.userDataDir = "dir\u0000invalido";
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(invalid),
+            PhantoraPassProfilePolicy.evaluateForPersistence(invalid),
             "absolute_path_required");
     }
 
     @Test
     void screenModeRulesPerRuntimeBase() {
-        PhantomPassProfile windows = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile windows = SdkProfilePresets.phantoraPass(
             SdkProfilePreset.WINDOWS, "w", "W", "BR");
-        PhantomPassPolicyResult windowsResult =
-            PhantomPassProfilePolicy.evaluateForPersistence(windows);
+        PhantoraPassPolicyResult windowsResult =
+            PhantoraPassProfilePolicy.evaluateForPersistence(windows);
         assertTrue(windowsResult.accepted() || codes(windowsResult).contains("screen_mode_required"));
 
-        PhantomPassProfile dockerSpoof = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile dockerSpoof = SdkProfilePresets.phantoraPass(
             SdkProfilePreset.DOCKER, "d", "D", "BR");
         dockerSpoof.profile.fingerprint.screen.mode = "real";
         assertSingleViolation(
-            PhantomPassProfilePolicy.evaluateForPersistence(dockerSpoof),
+            PhantoraPassProfilePolicy.evaluateForPersistence(dockerSpoof),
             "screen_mode_required");
     }
 
     @Test
     void spoofScreenWithoutXvfbSurfaceIsRejected() {
-        PhantomPassProfile docker = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile docker = SdkProfilePresets.phantoraPass(
             SdkProfilePreset.DOCKER, "d2", "D2", "BR");
         docker.profile.runtimeSurfaces.remove("xvfb-visible");
 
-        PhantomPassPolicyResult result =
-            PhantomPassProfilePolicy.evaluateForPersistence(docker);
+        PhantoraPassPolicyResult result =
+            PhantoraPassProfilePolicy.evaluateForPersistence(docker);
         assertSingleViolation(result, "virtual_display_surface_required");
     }
 
     @Test
     void launchWithoutRuntimeIsRejectedButPersistenceIsNot() {
-        PhantomPassProfile profile = linuxBase();
+        PhantoraPassProfile profile = linuxBase();
 
-        assertTrue(PhantomPassProfilePolicy.evaluateForPersistence(profile).accepted());
-        PhantomPassPolicyResult launch =
-            PhantomPassProfilePolicy.evaluateForLaunch(profile, null);
+        assertTrue(PhantoraPassProfilePolicy.evaluateForPersistence(profile).accepted());
+        PhantoraPassPolicyResult launch =
+            PhantoraPassProfilePolicy.evaluateForLaunch(profile, null);
         assertSingleViolation(launch, "runtime_required");
     }
 
     @Test
     void nativeHostRuntimeRejectsDockerBaseAndNonRealScreen() {
-        PhantomPassProfile docker = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile docker = SdkProfilePresets.phantoraPass(
             SdkProfilePreset.DOCKER, "d3", "D3", "BR");
-        PhantomPassPolicyResult result = PhantomPassProfilePolicy.evaluateForLaunch(
-            docker, PhantomPassRuntime.NATIVE_HOST);
+        PhantoraPassPolicyResult result = PhantoraPassProfilePolicy.evaluateForLaunch(
+            docker, PhantoraPassRuntime.NATIVE_HOST);
         List<String> codes = codes(result);
         assertTrue(codes.contains("runtime_kind_mismatch"), "" + codes);
         assertTrue(codes.contains("runtime_screen_mode_mismatch"), "" + codes);
 
-        PhantomPassProfile linuxWrongScreen = linuxBase();
+        PhantoraPassProfile linuxWrongScreen = linuxBase();
         linuxWrongScreen.profile.fingerprint.screen.mode = "spoof";
-        assertTrue(codes(PhantomPassProfilePolicy.evaluateForLaunch(
-            linuxWrongScreen, PhantomPassRuntime.NATIVE_HOST))
+        assertTrue(codes(PhantoraPassProfilePolicy.evaluateForLaunch(
+            linuxWrongScreen, PhantoraPassRuntime.NATIVE_HOST))
             .contains("runtime_screen_mode_mismatch"));
     }
 
     @Test
     void virtualDisplayRuntimeRejectsWindowsBaseAndRequiresExactGeometry() {
-        PhantomPassProfile windows = SdkProfilePresets.phantomPass(
+        PhantoraPassProfile windows = SdkProfilePresets.phantoraPass(
             SdkProfilePreset.WINDOWS, "w2", "W2", "BR");
-        PhantomPassRuntime.Geometry any = new PhantomPassRuntime.Geometry(
+        PhantoraPassRuntime.Geometry any = new PhantoraPassRuntime.Geometry(
             1920, 1080, 1920, 1040, 24, 24, 1.0);
-        assertTrue(codes(PhantomPassProfilePolicy.evaluateForLaunch(
-                windows, PhantomPassRuntime.virtualDisplay(any)))
+        assertTrue(codes(PhantoraPassProfilePolicy.evaluateForLaunch(
+                windows, PhantoraPassRuntime.virtualDisplay(any)))
             .contains("runtime_kind_mismatch"));
 
         // geometry nula -> exigida
-        PhantomPassProfile linux = linuxBase();
+        PhantoraPassProfile linux = linuxBase();
         linux.profile.fingerprint.screen.mode = "spoof";
         linux.profile.runtimeSurfaces.add("xvfb-visible");
-        assertTrue(codes(PhantomPassProfilePolicy.evaluateForLaunch(
-                linux, PhantomPassRuntime.virtualDisplay(null)))
+        assertTrue(codes(PhantoraPassProfilePolicy.evaluateForLaunch(
+                linux, PhantoraPassRuntime.virtualDisplay(null)))
             .contains("runtime_geometry_required"));
 
         // geometry incoerente -> inválida
-        PhantomPassRuntime.Geometry incoerente = new PhantomPassRuntime.Geometry(
+        PhantoraPassRuntime.Geometry incoerente = new PhantoraPassRuntime.Geometry(
             0, 1080, 1920, 1040, 24, 24, 1.0);
-        assertTrue(codes(PhantomPassProfilePolicy.evaluateForLaunch(
-                linux, PhantomPassRuntime.virtualDisplay(incoerente)))
+        assertTrue(codes(PhantoraPassProfilePolicy.evaluateForLaunch(
+                linux, PhantoraPassRuntime.virtualDisplay(incoerente)))
             .contains("runtime_geometry_invalid"));
     }
 
     @Test
     void acceptedResultCarriesDefensiveCopyOfProfile() {
-        PhantomPassProfile original = linuxBase();
-        PhantomPassPolicyResult result =
-            PhantomPassProfilePolicy.evaluateForPersistence(original);
+        PhantoraPassProfile original = linuxBase();
+        PhantoraPassPolicyResult result =
+            PhantoraPassProfilePolicy.evaluateForPersistence(original);
 
         assertTrue(result.accepted());
-        PhantomPassProfile evaluated = result.evaluatedProfile();
+        PhantoraPassProfile evaluated = result.evaluatedProfile();
         assertNotNull(evaluated);
         // evaluatedProfile() devolve cópia: mutação não afeta o caller
         evaluated.profile.name = "mutado";

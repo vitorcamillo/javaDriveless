@@ -124,7 +124,7 @@ class ProfileChromeOptionsFactoryTest {
     }
 
     @Test
-    void safeSdkAndPhantomPassProfilesRejectSandboxBypassesBeforeLaunch() {
+    void safeSdkAndPhantoraPassProfilesRejectSandboxBypassesBeforeLaunch() {
         for (String argument : List.of(
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
@@ -143,10 +143,10 @@ class ProfileChromeOptionsFactoryTest {
                     .hasMessageContaining("minimal-cdp")
                     .hasMessageNotContaining("IsolateOrigins");
 
-            PhantomPassProfile phantom = SdkProfilePresets.phantomPass(
-                    SdkProfilePreset.DOCKER, "phantom-args", "Phantom args", "BR");
-            phantom.profile.browser.extraArgs.add(argument);
-            assertThatThrownBy(() -> ProfileChromeOptionsFactory.fromPhantomPass(phantom))
+            PhantoraPassProfile phantora = SdkProfilePresets.phantoraPass(
+                    SdkProfilePreset.DOCKER, "phantora-args", "Phantora args", "BR");
+            phantora.profile.browser.extraArgs.add(argument);
+            assertThatThrownBy(() -> ProfileChromeOptionsFactory.fromPhantoraPass(phantora))
                     .as(argument)
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("minimal-cdp")
@@ -248,9 +248,9 @@ class ProfileChromeOptionsFactoryTest {
                 SdkProfilePresets.docker("docker-guard", "Docker guard", "US")));
         optionsByProfile.add(ProfileChromeOptionsFactory.fromProfile(
                 SdkProfilePresets.seleniumLike("seleniumlike-guard", "SeleniumLike guard")));
-        optionsByProfile.add(ProfileChromeOptionsFactory.fromPhantomPass(
-                SdkProfilePresets.phantomPass(
-                        SdkProfilePreset.DOCKER, "phantom-guard", "Phantom guard", "US")));
+        optionsByProfile.add(ProfileChromeOptionsFactory.fromPhantoraPass(
+                SdkProfilePresets.phantoraPass(
+                        SdkProfilePreset.DOCKER, "phantora-guard", "Phantora guard", "US")));
         List<String> bypasses = List.of(
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
@@ -356,8 +356,8 @@ class ProfileChromeOptionsFactoryTest {
         SdkProfile docker = SdkProfilePresets.docker("docker-" + suffix, "Docker", "US");
         SdkProfile seleniumLike = SdkProfilePresets.seleniumLike(
                 "seleniumlike-" + suffix, "SeleniumLike");
-        PhantomPassProfile phantomPass = SdkProfilePresets.phantomPass(
-                SdkProfilePreset.DOCKER, "phantompass-" + suffix, "PhantomPass", "US");
+        PhantoraPassProfile phantoraPass = SdkProfilePresets.phantoraPass(
+                SdkProfilePreset.DOCKER, "phantorapass-" + suffix, "PhantoraPass", "US");
         return List.of(
                 new StructuredProfileCase(
                         "windows", windows, () -> ProfileChromeOptionsFactory.fromProfile(windows)),
@@ -366,8 +366,8 @@ class ProfileChromeOptionsFactoryTest {
                 new StructuredProfileCase(
                         "docker", docker, () -> ProfileChromeOptionsFactory.fromProfile(docker)),
                 new StructuredProfileCase(
-                        "phantompass", phantomPass.profile,
-                        () -> ProfileChromeOptionsFactory.fromPhantomPass(phantomPass)),
+                        "phantorapass", phantoraPass.profile,
+                        () -> ProfileChromeOptionsFactory.fromPhantoraPass(phantoraPass)),
                 new StructuredProfileCase(
                         "seleniumlike", seleniumLike,
                         () -> ProfileChromeOptionsFactory.fromProfile(seleniumLike)));
