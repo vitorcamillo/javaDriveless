@@ -1,5 +1,9 @@
 # Java Driverless
 
+![Demonstração do javaDriveless](docs/demo.png)
+
+*Um programa Java de poucas linhas controlando o Chrome por CDP: preenche a página, confere o resultado e salva o screenshot.*
+
 Automação de navegador em Java pelo Chrome DevTools Protocol (CDP), sem ChromeDriver.
 A biblioteca gerencia perfis do Chrome, navegação, entrada, cookies, JavaScript e
 múltiplos alvos por meio de uma API Java.
