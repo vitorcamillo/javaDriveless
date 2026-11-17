@@ -1,5 +1,9 @@
 # Java Driverless
 
+![MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green) ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white) ![CDP](https://img.shields.io/badge/Chrome-DevTools%20Protocol-4285F4?logo=googlechrome&logoColor=white)
+
+**In English:** Chrome automation for Java over the DevTools Protocol, no ChromeDriver needed, with persistent profiles, native input, cookies and multi-tab control.
+
 ![Demonstração do javaDriveless](docs/demo.png)
 
 *Um programa Java de poucas linhas controlando o Chrome por CDP: preenche a página, confere o resultado e salva o screenshot.*
