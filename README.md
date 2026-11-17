@@ -1,6 +1,6 @@
 # Java Driverless
 
-![MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green) ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white) ![CDP](https://img.shields.io/badge/Chrome-DevTools%20Protocol-4285F4?logo=googlechrome&logoColor=white)
+![MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green) ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white) ![CDP](https://img.shields.io/badge/Chrome-DevTools%20Protocol-4285F4?logo=googlechrome&logoColor=white) ![Maven Central](https://img.shields.io/maven-central/v/io.github.vitorcamillo/javadriveless?label=Maven%20Central)
 
 **In English:** Chrome automation for Java over the DevTools Protocol, no ChromeDriver needed, with persistent profiles, native input, cookies and multi-tab control.
 
@@ -14,6 +14,20 @@ múltiplos alvos por meio de uma API Java.
 
 Esta edição pública não contém perfis de navegador, cookies, credenciais,
 configuração de proxy nem dados de projetos privados.
+
+## Instalação
+
+Publicado no [Maven Central](https://central.sonatype.com/artifact/io.github.vitorcamillo/javadriveless):
+
+```xml
+<dependency>
+    <groupId>io.github.vitorcamillo</groupId>
+    <artifactId>javadriveless</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+Gradle: `implementation("io.github.vitorcamillo:javadriveless:2.0.0")`
 
 ## Requisitos
 
